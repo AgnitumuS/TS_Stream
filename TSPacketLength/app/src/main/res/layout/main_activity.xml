@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/btn_request_permission"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:text="@string/main_btn_request_permission"
+        android:visibility="gone"/>
+
+    <ListView
+        android:id="@+id/lv_file_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_packet_length"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/main_tv_packet_length" />
+
+            <TextView
+                android:id="@+id/tv_packet_num"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/main_tv_packet_num" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
