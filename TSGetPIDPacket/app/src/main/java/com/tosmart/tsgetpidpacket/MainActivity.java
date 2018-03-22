@@ -147,8 +147,8 @@ public class MainActivity extends AppCompatActivity {
                  * */
                 mPacketManager = new PacketManager(
                         mTSFilePath + mFileList[position],
-                        0x0000,
-                        0x00);
+                        0x0012,
+                        0x4e);
                 // 非必须：文件输出路径
                 mPacketManager.setOutputFilePath(mTSFilePath + "resultFile" + (mFileList.length - 2));
                 Log.d(TAG, " ---- 开启线程");

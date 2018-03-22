@@ -20,9 +20,15 @@ import static java.lang.Integer.toHexString;
 
 public class SectionManager {
     private static final String TAG = "SectionManager";
+    private static final int PACKET_HEADER_LENGTH = 4;
+    private static final int SKIP_ONE = 1;
+    private static final int THE_FIRST_THREE = 3;
 
-    private Section mSection;
+    private boolean isStartToMatchOneSection = false;
+    private int mContinuityCounter = -1;
+    private int mNeedPacketNum = 1;
 
+    private Section mSection = new Section();
     private List<Section> mSectionList = new ArrayList<>();
 
 
@@ -32,11 +38,28 @@ public class SectionManager {
 
     public void matchSection(Packet packet, int inputTableId) {
         byte[] buff = packet.getPacket();
+        int packetLength = buff.length;
 
-        // 判断 Section Data 的开始标志
+        int transportErrorIndicator = packet.getTransportErrorIndicator();
+        int payloadUnitStartIndicator = packet.getPayloadUnitStartIndicator();
+        int continuityCounter = packet.getContinuityCounter();
+        Log.d(TAG, " ---------------------------------------------- ");
+        Log.d(TAG, "transportErrorIndicator : " + toHexString(transportErrorIndicator));
+        Log.d(TAG, "payloadUnitStartIndicator : " + toHexString(payloadUnitStartIndicator));
+        Log.d(TAG, "continuityCounter : " + toHexString(continuityCounter));
+
+        // 判断传输错误
+        if (transportErrorIndicator == 0x1) {
+            Log.e(TAG, "transport_error_indicator : " + toHexString(transportErrorIndicator));
+            return;
+        }
+
         int skipToSectionBegin = 3;
-        if (packet.getPayloadUnitStartIndicator() == 0x1) {
-            // 除去一个字节
+        if (payloadUnitStartIndicator == 0x1) {
+            isStartToMatchOneSection = true;
+            // 包的累加计算
+            mContinuityCounter = continuityCounter;
+
             skipToSectionBegin += 1;
 
             int tableId = buff[skipToSectionBegin + 1] & 0xFF;
@@ -44,17 +67,19 @@ public class SectionManager {
             int versionNumber = (buff[skipToSectionBegin + 6] >> 1) & 0x1F;
             int sectionNumber = buff[skipToSectionBegin + 7] & 0xFF;
             int lastSectionNumber = buff[skipToSectionBegin + 8] & 0xFF;
+            Log.d(TAG, "  ");
+            Log.d(TAG, "tableId : " + toHexString(tableId));
+            Log.d(TAG, "sectionLength : " + toHexString(sectionLength));
+            Log.d(TAG, "versionNumber : " + toHexString(versionNumber));
+            Log.d(TAG, "sectionNumber : " + toHexString(sectionNumber));
+            Log.d(TAG, "lastSectionNumber : " + toHexString(lastSectionNumber));
 
             if (tableId != inputTableId) {
+                Log.e(TAG, "tableId : " + toHexString(tableId));
                 return;
             }
 
-            mSection = new Section(
-                    tableId,
-                    sectionLength,
-                    versionNumber,
-                    sectionNumber,
-                    lastSectionNumber);
+            mSection = new Section(tableId, sectionLength, versionNumber, sectionNumber, lastSectionNumber);
 
             // tableId : 8
             // section_syntax_indicator : 1
@@ -62,52 +87,77 @@ public class SectionManager {
             // reserved_1 : 2
             // sectionLength : 12
             // -- total : 24 (3 byte)
-            byte[] sectionData = new byte[sectionLength + 3];
-            // 已读取的 section 长度
+            int sectionSize = sectionLength + 3;
+            Log.d(TAG, "sectionSize : " + sectionSize);
+
+            byte[] sectionData = new byte[sectionSize];
             int sectionCursor = mSection.getSectionCursor();
 
-            // 如果 sectionLength <= Packet Data 的最大负荷，循环 sectionLength
-            if (sectionLength <= buff.length - 8) {
-                for (int i = 0; i < sectionLength + 3; i++) {
+            // 计算 section length 是否挎包,跨多少
+            mNeedPacketNum = 1;
+            int theMaxEffectiveData = packetLength - PACKET_HEADER_LENGTH - SKIP_ONE - THE_FIRST_THREE;
+            int dValue = sectionLength - theMaxEffectiveData;
+            if (dValue <= 0) {
+                Log.d(TAG, " ------------ 需要包数 : " + mNeedPacketNum);
+                for (int i = 0; i < sectionSize; i++) {
                     sectionCursor++;
                     sectionData[i] = buff[skipToSectionBegin + 1 + i];
                 }
             } else {
-                // 如果 sectionLength > Packet Data 的最大负荷，循环 Packet Length - 8
-                for (int i = 0; i < buff.length - 8; i++) {
+                mNeedPacketNum += dValue / (packetLength - PACKET_HEADER_LENGTH) + 1;
+                Log.d(TAG, " ------------ 需要包数 : " + mNeedPacketNum);
+                for (int i = 0; i < theMaxEffectiveData; i++) {
                     sectionCursor++;
                     sectionData[i] = buff[skipToSectionBegin + 1 + i];
                 }
             }
+            mNeedPacketNum--;
+            Log.d(TAG, " ------------ 还需包数 : " + mNeedPacketNum);
+
             // 保存 Section
             mSection.setSectionData(sectionData);
             // 记录 Section 写到的位置
             mSection.setSectionCursor(sectionCursor);
 
         } else {
-            // 判断是否存已经存有 section ，
-            // 没有就什么都不干，有继续写 unFinishSection
             int sectionCursor = mSection.getSectionCursor();
-            if (sectionCursor != 0) {
+            if (sectionCursor == 0) {
+                Log.e(TAG, "还未有表头信息");
+                return;
+            } else {
                 // 继续补充 section
                 byte[] unFinishSectionData = mSection.getSectionData();
                 int times = 0;
-                for (int i = 0; i < mSection.getSectionLength() - (sectionCursor - 3); i++) {
-                    times++;
-                    unFinishSectionData[sectionCursor + i] = buff[skipToSectionBegin + 1 + i];
+
+                int theMaxEffectiveData = packetLength - PACKET_HEADER_LENGTH;
+                int surplusValue = mSection.getSectionLength() - (sectionCursor - THE_FIRST_THREE);
+                if (surplusValue <= theMaxEffectiveData) {
+                    for (int i = 0; i < surplusValue; i++) {
+                        times++;
+                        unFinishSectionData[sectionCursor + i] = buff[PACKET_HEADER_LENGTH + i];
+                    }
+                } else {
+                    for (int i = 0; i < theMaxEffectiveData; i++) {
+                        times++;
+                        unFinishSectionData[sectionCursor + i] = buff[skipToSectionBegin + 1 + i];
+                    }
                 }
+                mNeedPacketNum--;
+                Log.d(TAG, " ------------ 还需包数 : " + mNeedPacketNum);
+
                 mSection.setSectionData(unFinishSectionData);
                 mSection.setSectionCursor(sectionCursor + times);
             }
         }
 
-        updateSectionList();
+        if (mNeedPacketNum == 0) {
+            updateSectionList();
+        }
     }
 
     private void updateSectionList() {
         // 判断是否为一条完整的 section
         if (mSection.getSectionCursor() == mSection.getSectionLength() + 3) {
-            Log.d(TAG, "get a complete one section");
             // 分配新内存，防止引用相同内存地址
             Section section = new Section(
                     mSection.getTableId(),
