@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.tosmart.tspacketlength.MainActivity;
 
+
 /**
  * MyThread
  *
@@ -18,21 +19,17 @@ public class MyThread extends Thread {
     private static final String TAG = "MyThread";
     public static final String PACKET_LENGTH_KEY = "packetLen";
     public static final String PACKET_START_POSITION_KEY = "packetStartPosition";
-    public static final String PACKET_NUMBER_KEY = "packetNum";
 
     private PacketManager mPacketManager;
 
     private String mFilePath;
 
-    private int mInputPID;
-
     private Handler mHandler;
 
 
-    public MyThread(String filePath, int inputPID, Handler handler) {
+    public MyThread(String filePath, Handler handler) {
         super();
         this.mFilePath = filePath;
-        this.mInputPID = inputPID;
         this.mHandler = handler;
     }
 
@@ -70,20 +67,6 @@ public class MyThread extends Thread {
         msg.setData(data);
         mHandler.sendMessage(msg);
 
-        // 获取指定 PID 的包
-        int packetNum = mPacketManager.getSpecifiedPacket(
-                mInputPID,
-                mFilePath,
-                "/sdcard/ts/PID.txt");
-        Log.d(TAG, "succeed to get all Specified Packet : " + packetNum);
-
-
-        // 更新 UI
-        msg = Message.obtain();
-        msg.what = MainActivity.REFRESH_UI_PACKET_NUM;
-        data.putInt(PACKET_NUMBER_KEY, packetNum);
-        msg.setData(data);
-        mHandler.sendMessage(msg);
     }
 
 }

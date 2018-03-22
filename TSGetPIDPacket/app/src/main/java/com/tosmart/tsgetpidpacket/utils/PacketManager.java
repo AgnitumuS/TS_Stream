@@ -1,18 +1,24 @@
-package com.tosmart.tspacketlength.util;
+package com.tosmart.tsgetpidpacket.utils;
 
+import android.os.Environment;
 import android.util.Log;
+
+import com.tosmart.tsgetpidpacket.beans.Packet;
+import com.tosmart.tsgetpidpacket.beans.Section;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 import static java.lang.Integer.toHexString;
 
 /**
- * MainActivity
+ * PacketManager
  *
  * @author ggz
- * @date 2018/3/17
+ * @date 2018/3/22
  */
 
 public class PacketManager {
@@ -21,34 +27,61 @@ public class PacketManager {
     private static final int PACKET_HEADER_SYNC_BYTE = 0x47;
     private static final int PACKET_LENGTH_188 = 188;
     private static final int PACKET_LENGTH_204 = 204;
+    private static final String OUTPUT_FILE_PATH = Environment.getExternalStorageDirectory()
+            .getPath() + "/resultFile";
 
 
-    /**
-     * 包头的开始位置
-     */
-    private int mPacketStartPosition = -1;
-    /**
-     * 包的长度
-     */
+    private String mInputFilePath = null;
+    private String mOutputFilePath = OUTPUT_FILE_PATH;
+
+    private int mInputPID = -1;
+    private int mInputTableID = -1;
+
     private int mPacketLength = -1;
+    private int mPacketStartPosition = -1;
+
+    private int mPacketNum = -1;
+
+    private SectionManager mSectionManager = new SectionManager();
+
+    /**
+     * 构造函数
+     * 用于解包长
+     * 对应线程：GetPacketLengthThread
+     */
+    public PacketManager(String inputFilePath) {
+        super();
+        this.mInputFilePath = inputFilePath;
+    }
 
 
     /**
      * 构造函数
+     * 用于获取指定 PID 和 table_id 的 section
+     * 对应线程：GetPidPacketThread
      */
-    public PacketManager() {
+    public PacketManager(String inputFilePath, int inputPID, int inputTableId) {
         super();
+        this.mInputFilePath = inputFilePath;
+        this.mInputPID = inputPID;
+        this.mInputTableID = inputTableId;
     }
 
+
     /**
-     * 获取包的 长度 和 开始位置
+     * 匹配 Packet Length 和 Packet Start Position
      */
-    public int getPacketLength(String filePath) {
+    public int matchPacketLength(String inputFilePath) {
         long startTime = System.currentTimeMillis();
 
-        Log.d(TAG, filePath);
+        mInputFilePath = inputFilePath;
+        Log.d(TAG, " -- matchPacketLength()");
+        Log.d(TAG, "mInputFilePath : " + mInputFilePath);
+
+        mPacketLength = -1;
+        mPacketStartPosition = -1;
         try {
-            File file = new File(filePath);
+            File file = new File(mInputFilePath);
             FileInputStream fis = new FileInputStream(file);
 
             int tmp;
@@ -169,10 +202,98 @@ public class PacketManager {
     }
 
 
+    /**
+     * 匹配指定 PID 和 table_id 的 section
+     * 存进 mSectionList
+     */
+    public int matchPidPacket(String inputFilePath, int inputPID, int inputTableID) {
+        Log.d(TAG, " -- matchPidPacket()");
+        mInputFilePath = inputFilePath;
+        mInputPID = inputPID;
+        mInputTableID = inputTableID;
+
+        if (mPacketLength == -1) {
+            matchPacketLength(mInputFilePath);
+        }
+
+        try {
+            FileInputStream fis = new FileInputStream(mInputFilePath);
+            FileOutputStream fos = new FileOutputStream(mOutputFilePath);
+
+            // 跳到包的开始位置
+            long lg = fis.skip(mPacketStartPosition);
+            if (lg != mPacketStartPosition) {
+                Log.e(TAG, "failed to skip " + mPacketStartPosition + "bytes");
+                return -1;
+            }
+
+            mPacketNum = 0;
+            int err;
+            do {
+                byte[] buff = new byte[mPacketLength];
+                err = fis.read(buff);
+                if (err == mPacketLength) {
+                    if (buff[0] == PACKET_HEADER_SYNC_BYTE) {
+                        // 构建 packet 对象
+                        Packet packet = new Packet(buff);
+
+                        // 匹配 pid
+                        if (packet.getPid() == mInputPID) {
+                            mPacketNum++;
+
+                            // 匹配 section
+                            mSectionManager.matchSection(packet, mInputTableID);
+
+                            // 写出文件
+                            fos.write(buff);
+                        }
+                    }
+                }
+            } while (err != -1);
+
+            fos.close();
+            fis.close();
+        } catch (IOException e) {
+            Log.e(TAG, "IOException : 打开文件失败");
+            e.printStackTrace();
+        }
+        Log.d(TAG, " ---------------------------------------------- ");
+        Log.d(TAG, "the number of the Packet's PID = 0x" + mInputPID
+                + " is " + mPacketNum);
+        Log.d(TAG, "success to write file to " + mOutputFilePath);
+
+        // 获取并显示 section 结果
+        List<Section> list = mSectionManager.getSectionList();
+
+        return mPacketNum;
+    }
+
+    public String getInputFilePath() {
+        return mInputFilePath;
+    }
+
+    public int getPacketLength() {
+        return mPacketLength;
+    }
+
     public int getPacketStartPosition() {
         return mPacketStartPosition;
     }
 
+    public int getInputPID() {
+        return mInputPID;
+    }
 
+    public int getInputTableID() {
+        return mInputTableID;
+    }
+
+    public void setOutputFilePath(String mOutputFilePath) {
+        this.mOutputFilePath = mOutputFilePath;
+    }
+
+    public String getOutputFilePath() {
+        return mOutputFilePath;
+    }
 }
 

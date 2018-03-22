@@ -33,6 +33,12 @@
                 android:layout_height="wrap_content"
                 android:text="@string/main_tv_packet_length" />
 
+            <TextView
+                android:id="@+id/tv_packet_number"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/main_tv_packet_number" />
+
         </LinearLayout>
     </ScrollView>
 

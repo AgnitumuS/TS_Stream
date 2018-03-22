@@ -1,4 +1,4 @@
-package com.tosmart.tspacketlength;
+package com.tosmart.tsgetpidpacket;
 
 import android.Manifest;
 import android.os.Build;
@@ -19,10 +19,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.tosmart.tspacketlength.util.MyThread;
+import com.tosmart.tsgetpidpacket.threads.GetPidPacketThread;
+import com.tosmart.tsgetpidpacket.utils.PacketManager;
 
 import java.io.File;
-import java.io.IOException;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
@@ -30,19 +30,27 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
  * MainActivity
  *
  * @author ggz
- * @date 2018/3/15
+ * @date 2018/3/19
  */
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private static final int WRITE_EXTERNAL_PERMISSION = 1;
     public static final int REFRESH_UI_PACKET_LENGTH = 0;
+    public static final int REFRESH_UI_PACKET_NUMBER = 1;
+    public static final String PACKET_LENGTH_KEY = "packetLen";
+    public static final String PACKET_START_POSITION_KEY = "packetStartPosition";
+    public static final String PACKET_NUMBER_KEY = "packetNum";
 
 
     private String mTSFilePath;
     private String[] mFileList;
 
+    private PacketManager mPacketManager;
+    private ListView mListView;
+    private ArrayAdapter<String> mArrayAdapter;
     private TextView mPacketLengthTv;
+    private TextView mPacketNumTv;
     private Button mRequestPermissionBtn;
 
     Handler myUIHandler = new Handler() {
@@ -52,17 +60,24 @@ public class MainActivity extends AppCompatActivity {
             Bundle data = msg.getData();
             int packetLen;
             int packetStartPosition;
+            int packetNum;
             switch (msg.what) {
                 case REFRESH_UI_PACKET_LENGTH:
-                    packetLen = data.getInt(MyThread.PACKET_LENGTH_KEY);
-                    packetStartPosition = data.getInt(MyThread.PACKET_START_POSITION_KEY);
-                    String strResult = getResources().getString(R.string.main_tv_packet_length_result);
-                    strResult = String.format(strResult, packetLen, packetStartPosition);
-                    mPacketLengthTv.setText(strResult);
+                    packetLen = data.getInt(PACKET_LENGTH_KEY);
+                    packetStartPosition = data.getInt(PACKET_START_POSITION_KEY);
+                    mPacketLengthTv.setText("PacketLength : " + packetLen +
+                            " , PacketStartPosition : " + packetStartPosition);
                     break;
 
-                default:
+                case REFRESH_UI_PACKET_NUMBER:
+                    packetNum = data.getInt(PACKET_NUMBER_KEY);
+                    mPacketNumTv.setText("PacketNum : " + packetNum);
+
+                    initData();
+                    initListView();
+
                     break;
+                default:
             }
         }
     };
@@ -91,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initView() {
         mPacketLengthTv = findViewById(R.id.tv_packet_length);
+        mPacketNumTv = findViewById(R.id.tv_packet_number);
 
         mRequestPermissionBtn = findViewById(R.id.btn_request_permission);
         mRequestPermissionBtn.setOnClickListener(new View.OnClickListener() {
@@ -102,40 +118,45 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initData() {
-        try {
-            mTSFilePath = Environment.getExternalStorageDirectory().getCanonicalPath() + "/ts/";
-            File file = new File(mTSFilePath);
-            // 获取 ts 文件夹里面的文件列表
-            mFileList = file.list();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-
-        }
+        mTSFilePath = Environment.getExternalStorageDirectory().getPath() + "/ts/";
+        File file = new File(mTSFilePath);
+        // 获取 ts 文件夹里面的文件列表
+        mFileList = file.list();
     }
 
     private void initListView() {
-        ListView listView = findViewById(R.id.lv_file_list);
+        mListView = findViewById(R.id.lv_file_list);
 
         if (mFileList != null) {
-            ArrayAdapter<String> mArrayAdapter = new ArrayAdapter<>(
+            mArrayAdapter = new ArrayAdapter<>(
                     this, android.R.layout.simple_list_item_1, mFileList);
-            listView.setAdapter(mArrayAdapter);
+            mListView.setAdapter(mArrayAdapter);
         }
 
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
-                Log.d(TAG, " ---- 开启线程");
 
                 mPacketLengthTv.setText(R.string.main_tv_packet_length);
+                mPacketNumTv.setText(R.string.main_tv_packet_number);
 
-                // 开启线程来解 包长 和 PID == 0x00 的包
-                MyThread myThread = new MyThread(
+                /*
+                 * Demo
+                 * 每种线程都有对应的构造方法来传参数
+                 * 详情请看 PacketManager 的构造方法
+                 * */
+                mPacketManager = new PacketManager(
                         mTSFilePath + mFileList[position],
+                        0x0000,
+                        0x00);
+                // 非必须：文件输出路径
+                mPacketManager.setOutputFilePath(mTSFilePath + "resultFile" + (mFileList.length - 2));
+                Log.d(TAG, " ---- 开启线程");
+                GetPidPacketThread getPidPacketThread = new GetPidPacketThread(
+                        mPacketManager,
                         myUIHandler);
-                myThread.start();
+                getPidPacketThread.start();
+
 
             }
         });
@@ -176,10 +197,10 @@ public class MainActivity extends AppCompatActivity {
 
                 initData();
                 initListView();
-
                 break;
 
             default:
+                break;
         }
     }
 
