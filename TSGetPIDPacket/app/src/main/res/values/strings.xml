@@ -1,6 +1,11 @@
 <resources>
     <string name="app_name">TS Get PID Packet</string>
     <string name="main_btn_request_permission">Request Permission</string>
+    <string name="main_tv_file_name">未知</string>
+    <string name="main_tv_show_popupwindow">选择</string>
+    <string name="main_tv_PID">PID : </string>
+    <string name="main_tv_tableID">tableID : </string>
+    <string name="main_btn_parse_section">Section</string>
     <string name="main_tv_packet_length">PacketLength :  , PacketStartPosition : </string>
     <string name="main_tv_packet_number">PacketNum : </string>
 </resources>

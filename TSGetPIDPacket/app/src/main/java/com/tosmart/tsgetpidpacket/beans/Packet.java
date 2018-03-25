@@ -73,7 +73,7 @@ public class Packet {
         this.transportErrorIndicator = (buff[1] >> 7) & 0x1;
         this.payloadUnitStartIndicator = (buff[1] >> 6) & 0x1;
         this.transportPriority = (buff[1] >> 5) & 0x1;
-        this.pid = ((buff[1] & 0x1F) << 8 | buff[2]) & 0x1FFF;
+        this.pid = ( ((buff[1] & 0x1F) << 8) | (buff[2] & 0xFF) ) & 0x1FFF;
         this.transportScramblingControl = (buff[3] >> 6) & 0x3;
         this.adaptationFieldControl = (buff[3] >> 4) & 0x3;
         this.continuityCounter = buff[3] & 0xF;

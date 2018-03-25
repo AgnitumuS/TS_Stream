@@ -1,6 +1,7 @@
 package com.tosmart.tsgetpidpacket;
 
 import android.Manifest;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -10,12 +11,17 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +29,8 @@ import com.tosmart.tsgetpidpacket.threads.GetPidPacketThread;
 import com.tosmart.tsgetpidpacket.utils.PacketManager;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
@@ -44,14 +52,12 @@ public class MainActivity extends AppCompatActivity {
 
 
     private String mTSFilePath;
-    private String[] mFileList;
+    private List<String> mFileList = new ArrayList<>();
 
     private PacketManager mPacketManager;
-    private ListView mListView;
-    private ArrayAdapter<String> mArrayAdapter;
+    private TextView mFileNameTv;
     private TextView mPacketLengthTv;
     private TextView mPacketNumTv;
-    private Button mRequestPermissionBtn;
 
     Handler myUIHandler = new Handler() {
         @Override
@@ -72,12 +78,11 @@ public class MainActivity extends AppCompatActivity {
                 case REFRESH_UI_PACKET_NUMBER:
                     packetNum = data.getInt(PACKET_NUMBER_KEY);
                     mPacketNumTv.setText("PacketNum : " + packetNum);
-
                     initData();
-                    initListView();
-
                     break;
+
                 default:
+                    break;
             }
         }
     };
@@ -99,20 +104,20 @@ public class MainActivity extends AppCompatActivity {
 
         // 初始化控件内容
         initData();
-
-        // 初始化 ListView
-        initListView();
     }
 
     private void initView() {
+        mFileNameTv = findViewById(R.id.tv_file_name);
         mPacketLengthTv = findViewById(R.id.tv_packet_length);
         mPacketNumTv = findViewById(R.id.tv_packet_number);
 
-        mRequestPermissionBtn = findViewById(R.id.btn_request_permission);
-        mRequestPermissionBtn.setOnClickListener(new View.OnClickListener() {
+        TextView showPopupWindowTv = findViewById(R.id.tv_show_popupwindow);
+        showPopupWindowTv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                requestPermission();
+                if (requestPermission()) {
+                    showPopupWindow();
+                }
             }
         });
     }
@@ -121,22 +126,62 @@ public class MainActivity extends AppCompatActivity {
         mTSFilePath = Environment.getExternalStorageDirectory().getPath() + "/ts/";
         File file = new File(mTSFilePath);
         // 获取 ts 文件夹里面的文件列表
-        mFileList = file.list();
+        String[] fileList = file.list();
+        if (fileList != null) {
+            mFileList.clear();
+            for (String str : fileList) {
+                mFileList.add(str);
+            }
+        }
     }
 
-    private void initListView() {
-        mListView = findViewById(R.id.lv_file_list);
+    private void showPopupWindow() {
+        //  获取屏幕的宽高像素
+        Display display = this.getWindow().getWindowManager().getDefaultDisplay();
+        DisplayMetrics metrics = new DisplayMetrics();
+        display.getMetrics(metrics);
+        int screenWidth = metrics.widthPixels;
+        int screenHeight = metrics.heightPixels;
 
-        if (mFileList != null) {
-            mArrayAdapter = new ArrayAdapter<>(
-                    this, android.R.layout.simple_list_item_1, mFileList);
-            mListView.setAdapter(mArrayAdapter);
-        }
+        View view = LayoutInflater.from(this).inflate(R.layout.main_popupwindow, null);
 
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        final PopupWindow popupWindow = new PopupWindow(view, screenWidth, screenHeight / 3 * 2, true);
+        popupWindow.setContentView(view);
+
+        initListView(view);
+
+        // 外部可点击，即点击 PopupWindow 以外的区域，PopupWindow 消失
+        popupWindow.setBackgroundDrawable(new BitmapDrawable());
+        popupWindow.setOutsideTouchable(true);
+
+        // 设置启动关闭动画
+        popupWindow.setAnimationStyle(R.style.PopupWindowAnim);
+
+        // 将 PopupWindow 的实例放在一个父容器中，并定位
+        View locationView = LayoutInflater.from(this).inflate(R.layout.main_activity, null);
+        popupWindow.showAtLocation(locationView, Gravity.BOTTOM, 0, 0);
+
+        ImageView closePopupWindowIv = view.findViewById(R.id.iv_close_popupwindow);
+        closePopupWindowIv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupWindow.dismiss();
+            }
+        });
+    }
+
+    private void initListView(View v) {
+        ListView listView = v.findViewById(R.id.lv_file_list);
+
+        ArrayAdapter adapter = new ArrayAdapter<>(
+                this, android.R.layout.simple_list_item_1, mFileList);
+        listView.setAdapter(adapter);
+
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
-
+                mFileNameTv.setText(mFileList.get(position));
                 mPacketLengthTv.setText(R.string.main_tv_packet_length);
                 mPacketNumTv.setText(R.string.main_tv_packet_number);
 
@@ -146,17 +191,16 @@ public class MainActivity extends AppCompatActivity {
                  * 详情请看 PacketManager 的构造方法
                  * */
                 mPacketManager = new PacketManager(
-                        mTSFilePath + mFileList[position],
+                        mTSFilePath + mFileList.get(position),
                         0x0012,
                         0x4e);
                 // 非必须：文件输出路径
-                mPacketManager.setOutputFilePath(mTSFilePath + "resultFile" + (mFileList.length - 2));
+                mPacketManager.setOutputFilePath(mTSFilePath + "resultFile" + (mFileList.size() - 2));
                 Log.d(TAG, " ---- 开启线程");
                 GetPidPacketThread getPidPacketThread = new GetPidPacketThread(
                         mPacketManager,
                         myUIHandler);
                 getPidPacketThread.start();
-
 
             }
         });
@@ -166,17 +210,19 @@ public class MainActivity extends AppCompatActivity {
     /**
      * 请求系统读写权限
      */
-    private void requestPermission() {
-        int checkReadPermission = ContextCompat.checkSelfPermission(
+    private boolean requestPermission() {
+        int checkPermission = ContextCompat.checkSelfPermission(
                 this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
         //  是否已经授予权限
-        if (checkReadPermission != PERMISSION_GRANTED) {
+        if (checkPermission != PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
                     this,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     WRITE_EXTERNAL_PERMISSION);
+            return false;
         }
+
+        return true;
     }
 
     /**
@@ -189,14 +235,12 @@ public class MainActivity extends AppCompatActivity {
             case WRITE_EXTERNAL_PERMISSION:
                 if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
                     Toast.makeText(this, "WRITE_EXTERNAL_STORAGE ALLOW", Toast.LENGTH_SHORT).show();
-                    mRequestPermissionBtn.setVisibility(View.GONE);
+
+                    initData();
+
                 } else {
                     Toast.makeText(this, "WRITE_EXTERNAL_STORAGE DENY", Toast.LENGTH_SHORT).show();
-                    mRequestPermissionBtn.setVisibility(View.VISIBLE);
                 }
-
-                initData();
-                initListView();
                 break;
 
             default:

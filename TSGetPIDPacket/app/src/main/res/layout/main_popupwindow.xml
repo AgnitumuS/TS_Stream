@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/main_pw_title_rl_height"
+        android:paddingLeft="@dimen/padding_micro_super"
+        android:paddingRight="@dimen/padding_micro_super"
+        android:background="@color/colorTLightGrey">
+
+        <ImageView
+            android:id="@+id/iv_close_popupwindow"
+            android:layout_width="@dimen/main_pw_close_iv_width"
+            android:layout_height="@dimen/main_pw_close_iv_height"
+            android:padding="@dimen/padding_micro_super"
+            android:layout_centerVertical="true"
+            android:src="@drawable/cancel" />
+    </RelativeLayout>
+
+    <ListView
+        android:id="@+id/lv_file_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</LinearLayout>

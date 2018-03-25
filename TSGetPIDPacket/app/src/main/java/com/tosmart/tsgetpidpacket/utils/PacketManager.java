@@ -257,13 +257,14 @@ public class PacketManager {
             Log.e(TAG, "IOException : 打开文件失败");
             e.printStackTrace();
         }
+
+        // 打印 section 结果
+        mSectionManager.print();
+
         Log.d(TAG, " ---------------------------------------------- ");
-        Log.d(TAG, "the number of the Packet's PID = 0x" + mInputPID
+        Log.d(TAG, "the number of the Packet's PID = 0x" + toHexString(mInputPID)
                 + " is " + mPacketNum);
         Log.d(TAG, "success to write file to " + mOutputFilePath);
-
-        // 获取并显示 section 结果
-        List<Section> list = mSectionManager.getSectionList();
 
         return mPacketNum;
     }

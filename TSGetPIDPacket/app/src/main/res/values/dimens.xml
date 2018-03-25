@@ -56,4 +56,21 @@
     <dimen name="text_size_micro_micro">16sp</dimen>
     <dimen name="text_size_micro_super">13sp</dimen>
 
+
+    <!-- main view -->
+    <dimen name="main_title_rl_height">40dp</dimen>
+    <dimen name="main_goback_iv_width">30dp</dimen>
+    <dimen name="main_goback_iv_height">30dp</dimen>
+    <dimen name="main_file_name_tv_width">150dp</dimen>
+    <dimen name="main_file_name_tv_height">30dp</dimen>
+    <dimen name="main_section_rl_height">50dp</dimen>
+
+
+    <!-- main popupwindow -->
+    <dimen name="main_pw_title_rl_height">30dp</dimen>
+    <dimen name="main_pw_close_iv_width">25dp</dimen>
+    <dimen name="main_pw_close_iv_height">25dp</dimen>
+
+
+
 </resources>
