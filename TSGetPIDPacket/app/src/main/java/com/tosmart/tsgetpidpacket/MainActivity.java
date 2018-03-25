@@ -1,6 +1,7 @@
 package com.tosmart.tsgetpidpacket;
 
 import android.Manifest;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Environment;
@@ -20,13 +21,20 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bigkoo.pickerview.OptionsPickerView;
+import com.google.gson.Gson;
+import com.tosmart.tsgetpidpacket.beans.Picker;
 import com.tosmart.tsgetpidpacket.threads.GetPidPacketThread;
+import com.tosmart.tsgetpidpacket.utils.GetJsonDataUtil;
 import com.tosmart.tsgetpidpacket.utils.PacketManager;
+
+import org.json.JSONArray;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -58,6 +66,15 @@ public class MainActivity extends AppCompatActivity {
     private TextView mFileNameTv;
     private TextView mPacketLengthTv;
     private TextView mPacketNumTv;
+    private TextView mPidTv;
+    private TextView mTableIdTv;
+
+
+    private ArrayList<Picker> options1Items = new ArrayList<>();
+    private ArrayList<ArrayList<String>> options2Items = new ArrayList<>();
+    private String mPidStr;
+    private String mTableIdStr;
+
 
     Handler myUIHandler = new Handler() {
         @Override
@@ -104,12 +121,16 @@ public class MainActivity extends AppCompatActivity {
 
         // 初始化控件内容
         initData();
+
+        initPickerViewData();
     }
 
     private void initView() {
         mFileNameTv = findViewById(R.id.tv_file_name);
         mPacketLengthTv = findViewById(R.id.tv_packet_length);
         mPacketNumTv = findViewById(R.id.tv_packet_number);
+        mPidTv = findViewById(R.id.tv_pid);
+        mTableIdTv = findViewById(R.id.tv_table_id);
 
         TextView showPopupWindowTv = findViewById(R.id.tv_show_popupwindow);
         showPopupWindowTv.setOnClickListener(new View.OnClickListener() {
@@ -118,6 +139,14 @@ public class MainActivity extends AppCompatActivity {
                 if (requestPermission()) {
                     showPopupWindow();
                 }
+            }
+        });
+
+        LinearLayout ll = findViewById(R.id.ll_open_picker);
+        ll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showPickerView();
             }
         });
     }
@@ -205,6 +234,69 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void initPickerViewData() {
+        //获取assets目录下的json文件数据
+        String JsonData = new GetJsonDataUtil().getJson(this, "picker.json");
+
+        ArrayList<Picker> list1 = new ArrayList<>();
+        try {
+            JSONArray data = new JSONArray(JsonData);
+            Gson gson = new Gson();
+            for (int i = 0; i < data.length(); i++) {
+                Picker entity = gson.fromJson(data.optJSONObject(i).toString(), Picker.class);
+                list1.add(entity);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        options1Items = list1;
+
+        for (int i = 0; i < list1.size(); i++) {
+            ArrayList<String> list2 = new ArrayList<>();
+
+            for (int j = 0; j < list1.get(i).getTableId().size(); j++) {
+                String tableId = list1.get(i).getTableId().get(j);
+                list2.add(tableId);
+            }
+
+            options2Items.add(list2);
+        }
+
+    }
+
+    private void showPickerView() {
+
+        OptionsPickerView pvOptions = new OptionsPickerView.Builder(this, new OptionsPickerView.OnOptionsSelectListener() {
+            @Override
+            public void onOptionsSelect(int options1, int options2, int options3, View v) {
+                mPidStr = options1Items.get(options1).getPickerViewText();
+                mTableIdStr = options2Items.get(options1).get(options2);
+
+                mPidTv.setText(mPidStr);
+                mTableIdTv.setText(mTableIdStr);
+
+                String tx = "PID : " + mPidStr + "  TableID : " + mTableIdStr;
+                Toast.makeText(MainActivity.this, tx, Toast.LENGTH_SHORT).show();
+
+//                int pid = Integer.parseInt(mPidStr);
+//                int tableId = Integer.parseInt(mTableIdStr);
+//                Log.d(TAG, "PID : " + pid + "  TableID : " + tableId);
+            }
+        })
+                .setTitleText("select PID and TableId")
+                .setDividerColor(Color.GRAY)
+                .setTextColorCenter(Color.BLACK) //设置选中项文字颜色
+                .setSubCalSize(18)
+                .setContentTextSize(20)
+                .setSelectOptions(0, 0)
+                .build();
+
+        pvOptions.setPicker(options1Items, options2Items);
+        pvOptions.show();
+    }
+
 
 
     /**
