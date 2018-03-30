@@ -1,7 +1,7 @@
 package com.tosmart.tsgetpidpacket.beans;
 
 /**
- * MainActivity
+ * Section
  *
  * @author ggz
  * @date 2018/3/22
@@ -38,7 +38,6 @@ public class Section {
      * sectionData 操作
      */
     private byte[] sectionData;
-    private int sectionCursor = 0;
 
     /**
      * 构造函数
@@ -47,27 +46,21 @@ public class Section {
         super();
     }
 
-    public Section(int tableId, int sectionLength, int versionNumber,
-                   int sectionNumber, int lastSectionNumber) {
+    public Section(byte[] sectionBuff) {
         super();
-        this.tableId = tableId;
-        this.sectionLength = sectionLength;
-        this.versionNumber = versionNumber;
-        this.sectionNumber = sectionNumber;
-        this.lastSectionNumber = lastSectionNumber;
-    }
 
-    public Section(int tableId, int sectionLength, int versionNumber,
-                   int sectionNumber, int lastSectionNumber,
-                   byte[] sectionData, int sectionCursor) {
-        super();
+        int tableId = sectionBuff[0] & 0xFF;
+        int sectionLength = (((sectionBuff[1] & 0xF) << 8) | (sectionBuff[2] & 0xFF)) & 0xFFF;
+        int versionNumber = (sectionBuff[5] >> 1) & 0x1F;
+        int sectionNumber = sectionBuff[6] & 0xFF;
+        int lastSectionNumber = sectionBuff[7] & 0xFF;
+
         this.tableId = tableId;
         this.sectionLength = sectionLength;
         this.versionNumber = versionNumber;
         this.sectionNumber = sectionNumber;
         this.lastSectionNumber = lastSectionNumber;
-        this.sectionData = sectionData;
-        this.sectionCursor = sectionCursor;
+        this.sectionData = sectionBuff;
     }
 
 
@@ -124,14 +117,6 @@ public class Section {
 
     public void setSectionData(byte[] sectionData) {
         this.sectionData = sectionData;
-    }
-
-    public int getSectionCursor() {
-        return sectionCursor;
-    }
-
-    public void setSectionCursor(int sectionCursor) {
-        this.sectionCursor = sectionCursor;
     }
 
 }

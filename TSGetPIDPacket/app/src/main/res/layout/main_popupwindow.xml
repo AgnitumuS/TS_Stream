@@ -17,7 +17,7 @@
             android:layout_height="@dimen/main_pw_close_iv_height"
             android:padding="@dimen/padding_micro_super"
             android:layout_centerVertical="true"
-            android:src="@drawable/cancel" />
+            android:src="@drawable/main_popupwidow_cancel" />
     </RelativeLayout>
 
     <ListView

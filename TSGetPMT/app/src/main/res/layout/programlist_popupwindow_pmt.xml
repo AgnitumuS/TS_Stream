@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorDimGrey">
+
+    <TextView
+        android:id="@+id/tv_pmt_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/margin_micro_little"
+        android:text="@string/programlist_popupwidow_tv_pmt_id"
+        android:textSize="@dimen/text_size_small_micro"
+        android:textColor="@color/colorWhite"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/tv_pmt_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/margin_micro_little"
+            android:layout_marginRight="@dimen/margin_micro_little"
+            android:text="@string/programlist_popupwidow_tv_pmt_waitting"
+            android:textColor="@color/colorWhite"/>
+
+    </ScrollView>
+
+</LinearLayout>

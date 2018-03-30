@@ -20,6 +20,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -30,6 +31,7 @@ import android.widget.Toast;
 import com.bigkoo.pickerview.OptionsPickerView;
 import com.google.gson.Gson;
 import com.tosmart.tsgetpidpacket.beans.Picker;
+import com.tosmart.tsgetpidpacket.threads.GetPacketLengthThread;
 import com.tosmart.tsgetpidpacket.threads.GetPidPacketThread;
 import com.tosmart.tsgetpidpacket.utils.GetJsonDataUtil;
 import com.tosmart.tsgetpidpacket.utils.PacketManager;
@@ -46,10 +48,10 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
  * MainActivity
  *
  * @author ggz
- * @date 2018/3/19
+ * @date 2018/3/24
  */
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "MainActivity";
     private static final int WRITE_EXTERNAL_PERMISSION = 1;
     public static final int REFRESH_UI_PACKET_LENGTH = 0;
@@ -57,6 +59,9 @@ public class MainActivity extends AppCompatActivity {
     public static final String PACKET_LENGTH_KEY = "packetLen";
     public static final String PACKET_START_POSITION_KEY = "packetStartPosition";
     public static final String PACKET_NUMBER_KEY = "packetNum";
+    public static final int HEX = 16;
+    public static final int PICKERVIEW_SUB_TEXT_SIZE = 18;
+    public static final int PICKERVIEW_CONTENT_TEXT_SIZE = 20;
 
 
     private String mTSFilePath;
@@ -68,12 +73,15 @@ public class MainActivity extends AppCompatActivity {
     private TextView mPacketNumTv;
     private TextView mPidTv;
     private TextView mTableIdTv;
+    private PopupWindow mPopupWindow;
 
-
-    private ArrayList<Picker> options1Items = new ArrayList<>();
-    private ArrayList<ArrayList<String>> options2Items = new ArrayList<>();
+    private ArrayList<Picker> mOptions1Items = new ArrayList<>();
+    private ArrayList<ArrayList<String>> mOptions2Items = new ArrayList<>();
     private String mPidStr;
     private String mTableIdStr;
+    private int mPidInt = -1;
+    private int mTableIdInt = -1;
+    private String mInputFilePath;
 
 
     Handler myUIHandler = new Handler() {
@@ -84,17 +92,21 @@ public class MainActivity extends AppCompatActivity {
             int packetLen;
             int packetStartPosition;
             int packetNum;
+            String strResult;
             switch (msg.what) {
                 case REFRESH_UI_PACKET_LENGTH:
                     packetLen = data.getInt(PACKET_LENGTH_KEY);
                     packetStartPosition = data.getInt(PACKET_START_POSITION_KEY);
-                    mPacketLengthTv.setText("PacketLength : " + packetLen +
-                            " , PacketStartPosition : " + packetStartPosition);
+                    strResult = getResources().getString(R.string.main_tv_packet_length_result);
+                    strResult = String.format(strResult, packetLen, packetStartPosition);
+                    mPacketLengthTv.setText(strResult);
                     break;
 
                 case REFRESH_UI_PACKET_NUMBER:
                     packetNum = data.getInt(PACKET_NUMBER_KEY);
-                    mPacketNumTv.setText("PacketNum : " + packetNum);
+                    strResult = getResources().getString(R.string.main_tv_packet_number_result);
+                    strResult = String.format(strResult, packetNum);
+                    mPacketNumTv.setText(strResult);
                     initData();
                     break;
 
@@ -119,10 +131,7 @@ public class MainActivity extends AppCompatActivity {
             requestPermission();
         }
 
-        // 初始化控件内容
         initData();
-
-        initPickerViewData();
     }
 
     private void initView() {
@@ -133,22 +142,50 @@ public class MainActivity extends AppCompatActivity {
         mTableIdTv = findViewById(R.id.tv_table_id);
 
         TextView showPopupWindowTv = findViewById(R.id.tv_show_popupwindow);
-        showPopupWindowTv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        showPopupWindowTv.setOnClickListener(this);
+
+        LinearLayout openPickerViewLL = findViewById(R.id.ll_open_picker);
+        openPickerViewLL.setOnClickListener(this);
+
+        Button parseSectionBtn = findViewById(R.id.btn_parse_section);
+        parseSectionBtn.setOnClickListener(this);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.tv_show_popupwindow:
                 if (requestPermission()) {
                     showPopupWindow();
                 }
-            }
-        });
+                break;
 
-        LinearLayout ll = findViewById(R.id.ll_open_picker);
-        ll.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+            case R.id.ll_open_picker:
                 showPickerView();
-            }
-        });
+                break;
+
+            case R.id.btn_parse_section:
+                if (mInputFilePath != null && mPidInt != -1 && mTableIdInt != -1) {
+                    // 解 Section
+                    mPacketManager = new PacketManager(
+                            mInputFilePath,
+                            mPidInt,
+                            mTableIdInt);
+                    // 非必须：文件输出路径
+                    mPacketManager.setOutputFilePath(mTSFilePath + "resultFile" + (mFileList.size() - 2));
+                    Log.d(TAG, " ---- 开启线程");
+                    GetPidPacketThread getPidPacketThread = new GetPidPacketThread(
+                            mPacketManager,
+                            myUIHandler);
+                    getPidPacketThread.start();
+                } else {
+                    showPickerView();
+                }
+                break;
+
+            default:
+                break;
+        }
     }
 
     private void initData() {
@@ -162,8 +199,13 @@ public class MainActivity extends AppCompatActivity {
                 mFileList.add(str);
             }
         }
+
+        initPickerViewData();
     }
 
+    /**
+     * 显示显示并初始化 PopupWindow
+     */
     private void showPopupWindow() {
         //  获取屏幕的宽高像素
         Display display = this.getWindow().getWindowManager().getDefaultDisplay();
@@ -174,31 +216,34 @@ public class MainActivity extends AppCompatActivity {
 
         View view = LayoutInflater.from(this).inflate(R.layout.main_popupwindow, null);
 
-        final PopupWindow popupWindow = new PopupWindow(view, screenWidth, screenHeight / 3 * 2, true);
-        popupWindow.setContentView(view);
+        mPopupWindow = new PopupWindow(view, screenWidth, screenHeight / 3 * 2, true);
+        mPopupWindow.setContentView(view);
 
         initListView(view);
 
         // 外部可点击，即点击 PopupWindow 以外的区域，PopupWindow 消失
-        popupWindow.setBackgroundDrawable(new BitmapDrawable());
-        popupWindow.setOutsideTouchable(true);
+        mPopupWindow.setBackgroundDrawable(new BitmapDrawable());
+        mPopupWindow.setOutsideTouchable(true);
 
         // 设置启动关闭动画
-        popupWindow.setAnimationStyle(R.style.PopupWindowAnim);
+        mPopupWindow.setAnimationStyle(R.style.PopupWindowAnim);
 
         // 将 PopupWindow 的实例放在一个父容器中，并定位
         View locationView = LayoutInflater.from(this).inflate(R.layout.main_activity, null);
-        popupWindow.showAtLocation(locationView, Gravity.BOTTOM, 0, 0);
+        mPopupWindow.showAtLocation(locationView, Gravity.BOTTOM, 0, 0);
 
         ImageView closePopupWindowIv = view.findViewById(R.id.iv_close_popupwindow);
         closePopupWindowIv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                popupWindow.dismiss();
+                mPopupWindow.dismiss();
             }
         });
     }
 
+    /**
+     * 初始化 PopupWindow 里面的 listView 数据
+     */
     private void initListView(View v) {
         ListView listView = v.findViewById(R.id.lv_file_list);
 
@@ -214,89 +259,90 @@ public class MainActivity extends AppCompatActivity {
                 mPacketLengthTv.setText(R.string.main_tv_packet_length);
                 mPacketNumTv.setText(R.string.main_tv_packet_number);
 
-                /*
-                 * Demo
-                 * 每种线程都有对应的构造方法来传参数
-                 * 详情请看 PacketManager 的构造方法
-                 * */
-                mPacketManager = new PacketManager(
-                        mTSFilePath + mFileList.get(position),
-                        0x0012,
-                        0x4e);
-                // 非必须：文件输出路径
-                mPacketManager.setOutputFilePath(mTSFilePath + "resultFile" + (mFileList.size() - 2));
+                mInputFilePath = mTSFilePath + mFileList.get(position);
+
+                // 解包长
+                mPacketManager = new PacketManager(mInputFilePath);
                 Log.d(TAG, " ---- 开启线程");
-                GetPidPacketThread getPidPacketThread = new GetPidPacketThread(
+                GetPacketLengthThread getPacketLengthThread = new GetPacketLengthThread(
                         mPacketManager,
                         myUIHandler);
-                getPidPacketThread.start();
+                getPacketLengthThread.start();
 
+                mPopupWindow.dismiss();
             }
         });
     }
 
+    /**
+     * 初始化 PickerView 的数据
+     */
     private void initPickerViewData() {
-        //获取assets目录下的json文件数据
-        String JsonData = new GetJsonDataUtil().getJson(this, "picker.json");
+        //获取 assets 目录下的 json 文件数据
+        String jsonData = new GetJsonDataUtil().getJson(this, "picker.json");
 
-        ArrayList<Picker> list1 = new ArrayList<>();
+        ArrayList<Picker> pidList = new ArrayList<>();
         try {
-            JSONArray data = new JSONArray(JsonData);
+            JSONArray data = new JSONArray(jsonData);
             Gson gson = new Gson();
             for (int i = 0; i < data.length(); i++) {
                 Picker entity = gson.fromJson(data.optJSONObject(i).toString(), Picker.class);
-                list1.add(entity);
+                pidList.add(entity);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        options1Items = list1;
+        mOptions1Items = pidList;
 
-        for (int i = 0; i < list1.size(); i++) {
-            ArrayList<String> list2 = new ArrayList<>();
+        for (int i = 0; i < pidList.size(); i++) {
+            ArrayList<String> tableIdList = new ArrayList<>();
 
-            for (int j = 0; j < list1.get(i).getTableId().size(); j++) {
-                String tableId = list1.get(i).getTableId().get(j);
-                list2.add(tableId);
+            for (int j = 0; j < pidList.get(i).getTableId().size(); j++) {
+                String tableId = pidList.get(i).getTableId().get(j);
+                tableIdList.add(tableId);
             }
 
-            options2Items.add(list2);
+            mOptions2Items.add(tableIdList);
         }
 
     }
 
+
+    /**
+     * 初始化并显示 PickerView
+     */
     private void showPickerView() {
 
         OptionsPickerView pvOptions = new OptionsPickerView.Builder(this, new OptionsPickerView.OnOptionsSelectListener() {
             @Override
             public void onOptionsSelect(int options1, int options2, int options3, View v) {
-                mPidStr = options1Items.get(options1).getPickerViewText();
-                mTableIdStr = options2Items.get(options1).get(options2);
+                mPidStr = mOptions1Items.get(options1).getPickerViewText();
+                mTableIdStr = mOptions2Items.get(options1).get(options2);
 
                 mPidTv.setText(mPidStr);
                 mTableIdTv.setText(mTableIdStr);
 
-                String tx = "PID : " + mPidStr + "  TableID : " + mTableIdStr;
-                Toast.makeText(MainActivity.this, tx, Toast.LENGTH_SHORT).show();
-
-//                int pid = Integer.parseInt(mPidStr);
-//                int tableId = Integer.parseInt(mTableIdStr);
-//                Log.d(TAG, "PID : " + pid + "  TableID : " + tableId);
+                // 16进制 String 转 int
+                String str = mPidStr.split("x")[1];
+                Log.d(TAG, "str : " + str);
+                mPidInt = Integer.parseInt(str, HEX);
+                str = mTableIdStr.split("x")[1];
+                Log.d(TAG, "str : " + str);
+                mTableIdInt = Integer.parseInt(str, HEX);
             }
         })
-                .setTitleText("select PID and TableId")
+                .setTitleText(getResources().getString(R.string.main_pickerview_title))
                 .setDividerColor(Color.GRAY)
-                .setTextColorCenter(Color.BLACK) //设置选中项文字颜色
-                .setSubCalSize(18)
-                .setContentTextSize(20)
+                .setTextColorCenter(Color.BLACK)
+                .setSubCalSize(PICKERVIEW_SUB_TEXT_SIZE)
+                .setContentTextSize(PICKERVIEW_CONTENT_TEXT_SIZE)
                 .setSelectOptions(0, 0)
                 .build();
 
-        pvOptions.setPicker(options1Items, options2Items);
+        pvOptions.setPicker(mOptions1Items, mOptions2Items);
         pvOptions.show();
     }
-
 
 
     /**

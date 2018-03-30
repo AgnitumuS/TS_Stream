@@ -5,7 +5,10 @@ import com.bigkoo.pickerview.model.IPickerViewData;
 import java.util.List;
 
 /**
- * Created by ggz on 2018/3/25.
+ * MainActivity
+ *
+ * @author ggz
+ * @date 2018/3/24
  */
 
 public class Picker implements IPickerViewData {

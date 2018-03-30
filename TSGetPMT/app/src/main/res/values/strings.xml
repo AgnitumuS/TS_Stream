@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">TS Get PMT</string>
+    <string name="filelist_tv_title">File List</string>
+    <string name="programlist_tv_title">Program List</string>
+    <string name="programlist_item_tv_program_number">Program Num : </string>
+    <string name="programlist_item_tv_program_number_result">Program Num : %1$s</string>
+    <string name="programlist_item_tv_program_map_pid">PMT Pid : </string>
+    <string name="programlist_item_tv_program_map_pid_result">PMT Pid : %1$s</string>
+    <string name="programlist_popupwidow_tv_pmt_id">PMT Pid : </string>
+    <string name="programlist_popupwidow_tv_pmt_id_result">PMT Pid : %1$s</string>
+    <string name="programlist_popupwidow_tv_pmt_waitting">Waitting ......</string>
+</resources>

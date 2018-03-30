@@ -17,7 +17,7 @@
             android:layout_centerVertical="true"
             android:layout_marginLeft="@dimen/margin_micro"
             android:padding="@dimen/padding_micro_super"
-            android:src="@drawable/goback_white" />
+            android:src="@drawable/main_activity_goback" />
 
         <TextView
             android:id="@+id/tv_file_name"
@@ -67,7 +67,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="@string/main_tv_PID"/>
+                    android:text="@string/main_tv_pid"/>
 
                 <TextView
                     android:id="@+id/tv_pid"
@@ -85,7 +85,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="@string/main_tv_tableID"/>
+                    android:text="@string/main_tv_tableid"/>
 
                 <TextView
                     android:id="@+id/tv_table_id"
