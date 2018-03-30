@@ -57,15 +57,15 @@
     <dimen name="text_size_micro_super">13sp</dimen>
 
 
-    <!-- filelist view -->
-    <dimen name="filelist_actionbar_rl_height">40dp</dimen>
+    <!-- file list view -->
+    <dimen name="file_list_actionbar_rl_height">40dp</dimen>
 
-    <!-- programlist view -->
-    <dimen name="programlist_actionbar_rl_height">40dp</dimen>
-    <dimen name="programlist_goback_iv_width">30dp</dimen>
-    <dimen name="programlist_goback_iv_height">30dp</dimen>
-    <!-- programlist itemview -->
-    <dimen name="programlist_item_rl_height">50dp</dimen>
+    <!-- program list view -->
+    <dimen name="program_list_actionbar_rl_height">40dp</dimen>
+    <dimen name="program_list_back_iv_width">30dp</dimen>
+    <dimen name="program_list_back_iv_height">30dp</dimen>
+    <!-- program list item -->
+    <dimen name="program_list_item_rl_height">50dp</dimen>
 
 
 </resources>

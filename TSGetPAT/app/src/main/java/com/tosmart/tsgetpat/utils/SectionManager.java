@@ -132,7 +132,7 @@ public class SectionManager {
             // 判断 sectionLength
             int theMaxEffectiveLength = packetLength - PACKET_HEADER_LENGTH - SKIP_ONE;
             if (packetLength == PACKET_LENGTH_204) {
-                theMaxEffectiveLength  = packetLength - PACKET_HEADER_LENGTH - SKIP_ONE - 16;
+                theMaxEffectiveLength = packetLength - PACKET_HEADER_LENGTH - SKIP_ONE - 16;
             }
             if (sectionSize <= theMaxEffectiveLength) {
                 for (int i = 0; i < sectionSize; i++) {
@@ -186,7 +186,7 @@ public class SectionManager {
             int sectionSize = mList[unFinishSectionNumber].length;
             int theMaxEffectiveLength = packetLength - PACKET_HEADER_LENGTH;
             if (packetLength == PACKET_LENGTH_204) {
-                theMaxEffectiveLength  = packetLength - PACKET_HEADER_LENGTH - 16;
+                theMaxEffectiveLength = packetLength - PACKET_HEADER_LENGTH - 16;
             }
             int surplusValue = sectionSize - mCursor[unFinishSectionNumber];
             if (surplusValue <= theMaxEffectiveLength) {

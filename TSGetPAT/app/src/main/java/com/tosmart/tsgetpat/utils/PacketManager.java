@@ -293,7 +293,7 @@ public class PacketManager {
 
     /**
      * 根据 pid 和table 来解表
-     * */
+     */
     private void parseTable(List<Section> list, int pid) {
         Log.d(TAG, " -- parseTable()");
         if (list == null) {
@@ -349,6 +349,7 @@ public class PacketManager {
     public void setHandler(Handler mHandler) {
         this.mHandler = mHandler;
     }
+
     public Handler getHandler() {
         return mHandler;
     }

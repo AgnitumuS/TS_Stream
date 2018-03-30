@@ -69,7 +69,6 @@ public class Pat {
     private int lastSectionNumber;
 
 
-
     private List<PatProgram> patProgramList = new ArrayList<>();
 
     /**

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tosmart.tsgetpat">
+    package="com.tosmart.tsgetpmt">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name="com.tosmart.tsgetpat.FileListActivity"
+            android:name="com.tosmart.tsgetpmt.FileListActivity"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,7 +23,7 @@
         </activity>
 
         <activity
-            android:name=".ProgramListActivity"
+            android:name="com.tosmart.tsgetpmt.ProgramListActivity"
             android:launchMode="singleTask" />
     </application>
 

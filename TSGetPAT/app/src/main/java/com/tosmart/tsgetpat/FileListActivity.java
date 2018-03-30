@@ -49,7 +49,7 @@ public class FileListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.filelist_activity);
+        setContentView(R.layout.file_list_activity);
 
         // 初始化 UI 控件
         initView();
@@ -66,7 +66,7 @@ public class FileListActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        mRefreshLayout = findViewById(R.id.refreshlayout_refresh_filelist);
+        mRefreshLayout = findViewById(R.id.refresh_layout_refresh_file_list);
         mRefreshLayout.setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh(RefreshLayout refreshlayout) {

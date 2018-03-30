@@ -9,7 +9,6 @@ import com.tosmart.tsgetpat.FileListActivity;
 import com.tosmart.tsgetpat.utils.PacketManager;
 
 
-
 /**
  * GetPidPacketThread
  *

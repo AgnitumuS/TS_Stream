@@ -54,7 +54,7 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(mContext)
-                .inflate(R.layout.programlist_activity_itemview, parent, false);
+                .inflate(R.layout.program_list_item, parent, false);
         MyViewHolder holder = new MyViewHolder(view);
         return holder;
     }
@@ -63,13 +63,15 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         MyViewHolder myViewHolder = (MyViewHolder) holder;
         String str = "0x" + toHexString(mList.get(position).getProgramNumber());
-        String strResult = mContext.getResources().getString(R.string.programlist_item_tv_program_number_result);
+        String strResult = mContext.getResources().getString(R.string.program_list_item_tv_program_number_result);
         str = String.format(strResult, str);
         myViewHolder.programNumTv.setText(str);
+
         str = "0x" + toHexString(mList.get(position).getProgramMapPid());
-        strResult =  mContext.getResources().getString(R.string.programlist_item_tv_program_map_pid_result);
+        strResult = mContext.getResources().getString(R.string.program_list_item_tv_program_map_pid_result);
         str = String.format(strResult, str);
         myViewHolder.programMapPidTv.setText(str);
+
         myViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

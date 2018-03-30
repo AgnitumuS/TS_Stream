@@ -37,8 +37,6 @@ public class ProgramListActivity extends AppCompatActivity {
     private static final int PAT_PID = 0x0000;
     private static final int PAT_TABLE_ID = 0x00;
     public static final int REFRESH_UI_PROGRAM_LIST = 0;
-    private static final String FILE1 = "000.ts";
-    private static final String FILE2 = "SUB-001_europe_TV5.ts";
     private static final String HISTORY_FOLDER_PATH = Environment.getExternalStorageDirectory()
             .getPath() + "/ts_history/";
 
@@ -74,7 +72,7 @@ public class ProgramListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.programlist_activity);
+        setContentView(R.layout.program_list_activity);
 
         // 获取输入文件的路径和名字
         mTSFolderPath = getIntent().getStringExtra(FileListActivity.KEY_FOLDER_PATH);
@@ -87,8 +85,8 @@ public class ProgramListActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        ImageView goBackIv = findViewById(R.id.iv_goback);
-        goBackIv.setOnClickListener(new View.OnClickListener() {
+        ImageView backIv = findViewById(R.id.iv_back);
+        backIv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
@@ -102,7 +100,7 @@ public class ProgramListActivity extends AppCompatActivity {
         programListRv.setAdapter(mAdapter);
 
 
-        mRefreshLayout = findViewById(R.id.refreshlayout_refresh_programlist);
+        mRefreshLayout = findViewById(R.id.refresh_layout_refresh_program_list);
         mRefreshLayout.setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh(RefreshLayout refreshlayout) {
@@ -128,7 +126,7 @@ public class ProgramListActivity extends AppCompatActivity {
 
             boolean isFindHistoryFile = false;
             String historyFilePath = findHistoryFile(mFileName + "_pat");
-            if (inputFilePath != null) {
+            if (historyFilePath != null) {
                 isFindHistoryFile = true;
                 inputFilePath = historyFilePath;
             }
@@ -153,7 +151,7 @@ public class ProgramListActivity extends AppCompatActivity {
     }
 
     private String findHistoryFile(String searchName) {
-        String path = null;
+        String path;
         File file = new File(HISTORY_FOLDER_PATH);
         if (!file.exists()) {
             file.mkdir();

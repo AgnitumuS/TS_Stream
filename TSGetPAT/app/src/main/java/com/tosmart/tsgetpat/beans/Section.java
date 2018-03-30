@@ -64,7 +64,6 @@ public class Section {
     }
 
 
-
     public int getTableId() {
         return tableId;
     }
