@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- common margin -->
+    <dimen name="margin_huge_large">200dp</dimen>
+    <dimen name="margin_huge_super_big">170dp</dimen>
+    <dimen name="margin_huge_more_big">150dp</dimen>
+    <dimen name="margin_huge_bigger">135dp</dimen>
+    <dimen name="margin_huge_big">120dp</dimen>
+    <dimen name="margin_huge_middle">110dp</dimen>
+    <dimen name="margin_huge_normal">100dp</dimen>
+    <dimen name="margin_huge">95dp</dimen>
+    <dimen name="margin_large">75dp</dimen>
+    <dimen name="margin_normal_big_plus">70dp</dimen>
+    <dimen name="margin_normal_bigger">65dp</dimen>
+    <dimen name="margin_normal_big">60dp</dimen>
+    <dimen name="margin_normal">50dp</dimen>
+    <dimen name="margin_middle_normal">45dp</dimen>
+    <dimen name="margin_small_normal">40dp</dimen>
+    <dimen name="margin_small_little">35dp</dimen>
+    <dimen name="margin_small">30dp</dimen>
+    <dimen name="margin_little">25dp</dimen>
+    <dimen name="margin_little_little">20dp</dimen>
+    <dimen name="margin_micro_little_plus">18dp</dimen>
+    <dimen name="margin_micro_little">15dp</dimen>
+    <dimen name="margin_micro_title_line">14dp</dimen>
+    <dimen name="margin_micro_normal">12dp</dimen>
+    <dimen name="margin_micro">10dp</dimen>
+    <dimen name="margin_micro_super">8dp</dimen>
+    <dimen name="margin_micro_super_super">5dp</dimen>
+
+    <!-- common padding -->
+    <dimen name="padding_huge_big">150dp</dimen>
+    <dimen name="padding_huge">100dp</dimen>
+    <dimen name="padding_large">80dp</dimen>
+    <dimen name="padding_normal_big">65dp</dimen>
+    <dimen name="padding_normal">50dp</dimen>
+    <dimen name="padding_small_normal">40dp</dimen>
+    <dimen name="padding_small">35dp</dimen>
+    <dimen name="padding_little">25dp</dimen>
+    <dimen name="padding_little_little">20dp</dimen>
+    <dimen name="padding_micro_little">15dp</dimen>
+    <dimen name="padding_micro">10dp</dimen>
+    <dimen name="padding_micro_super">5dp</dimen>
+    <dimen name="padding_micro_super_super">2dp</dimen>
+
+    <!-- common text size -->
+    <dimen name="text_size_large">50sp</dimen>
+    <dimen name="text_size_big_more">40sp</dimen>
+    <dimen name="text_size_big_normal">35sp</dimen>
+    <dimen name="text_size_big">30sp</dimen>
+    <dimen name="text_size_normal_big">27sp</dimen>
+    <dimen name="text_size_normal">25sp</dimen>
+    <dimen name="text_size_small">22sp</dimen>
+    <dimen name="text_size_small_micro">20sp</dimen>
+    <dimen name="text_size_micro">18sp</dimen>
+    <dimen name="text_size_micro_micro">16sp</dimen>
+    <dimen name="text_size_micro_super">13sp</dimen>
+
+
+    <!-- file list view -->
+    <dimen name="file_list_actionbar_rl_height">40dp</dimen>
+
+    <!-- program list view -->
+    <dimen name="program_list_actionbar_rl_height">40dp</dimen>
+    <dimen name="program_list_back_iv_width">30dp</dimen>
+    <dimen name="program_list_back_iv_height">30dp</dimen>
+    <!-- program list item -->
+    <dimen name="program_list_item_rl_height">50dp</dimen>
+
+
+</resources>
