@@ -6,4 +6,8 @@
     <string name="program_list_item_tv_program_number_result">Program Num : %1$s</string>
     <string name="program_list_item_tv_program_map_pid">PMT Pid : </string>
     <string name="program_list_item_tv_program_map_pid_result">PMT Pid : %1$s</string>
+    <string name="program_list_item_tv_service_id">Service Id : </string>
+    <string name="program_list_item_tv_service_id_result">Service Id : %1$s</string>
+    <string name="program_list_item_tv_service_name">Service Name : </string>
+    <string name="program_list_item_tv_service_name_result">Service Name : %1$s</string>
 </resources>

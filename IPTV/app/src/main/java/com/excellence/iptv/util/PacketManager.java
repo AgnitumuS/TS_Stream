@@ -1,14 +1,16 @@
-package com.tosmart.tsgetsdt.utils;
+package com.excellence.iptv.util;
 
 import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 
-import com.tosmart.tsgetsdt.ProgramListActivity;
-import com.tosmart.tsgetsdt.beans.Packet;
-import com.tosmart.tsgetsdt.beans.Section;
-import com.tosmart.tsgetsdt.beans.tables.Pat;
-import com.tosmart.tsgetsdt.beans.tables.Sdt;
+import com.excellence.iptv.SelectFileActivity;
+import com.excellence.iptv.bean.Packet;
+import com.excellence.iptv.bean.Program;
+import com.excellence.iptv.bean.Section;
+import com.excellence.iptv.bean.tables.Pat;
+import com.excellence.iptv.bean.tables.Pmt;
+import com.excellence.iptv.bean.tables.Sdt;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,8 +36,8 @@ public class PacketManager {
     private static final int PAT_PID = 0x0000;
     private static final int SDT_PID = 0x0011;
     private static final int PMT_TABLE_ID = 0x02;
-    private static final String OUTPUT_FILE_PATH = Environment.getExternalStorageDirectory()
-            .getPath() + "/ts_history/resultFile";
+    private static final String OUTPUT_FILE_PATH =
+            Environment.getExternalStorageDirectory().getPath() + "/ts_history/resultFile";
 
 
     private boolean isOver = false;
@@ -52,27 +54,27 @@ public class PacketManager {
     private int mPacketNum = -1;
 
     private SectionManager mSectionManager = new SectionManager();
-    private List<Section> mSectionList;
+
+    private List<Program> mProgramList = null;
 
     private Pat mPat = null;
     private Sdt mSdt = null;
+    private Pmt mPmt = null;
+
 
     /**
      * 构造函数
-     * 用于解包长
-     * 对应线程：GetPacketLengthThread
      */
+    public PacketManager(Handler handler) {
+        super();
+        this.mHandler = handler;
+    }
+
     public PacketManager(String inputFilePath) {
         super();
         this.mInputFilePath = inputFilePath;
     }
 
-
-    /**
-     * 构造函数
-     * 用于获取指定 PID 和 table_id 的 section
-     * 对应线程：GetPidPacketThread
-     */
     public PacketManager(String inputFilePath, int inputPID, int inputTableId, Handler handler) {
         super();
         this.mInputFilePath = inputFilePath;
@@ -226,9 +228,8 @@ public class PacketManager {
         Log.d(TAG, "inputFilePath : " + mInputFilePath);
         Log.d(TAG, "outputFilePath : " + mOutputFilePath);
 
-        if (mPacketLength == -1) {
-            matchPacketLength(mInputFilePath);
-        }
+        // 匹配 PacketLength 和 PacketStartPosition
+        matchPacketLength(mInputFilePath);
 
         try {
             FileInputStream fis = new FileInputStream(mInputFilePath);
@@ -281,9 +282,10 @@ public class PacketManager {
 
         // 打印 section 结果
         mSectionManager.print();
+
         // 解表
-        mSectionList = mSectionManager.getSectionList();
-        parseTable(mSectionList, mInputPID);
+        parseToTable(mSectionManager.getSectionList(), mInputPID);
+
 
         Log.d(TAG, " ---------------------------------------------- ");
         Log.d(TAG, "the number of the Packet's PID = 0x" + toHexString(mInputPID)
@@ -294,34 +296,50 @@ public class PacketManager {
     }
 
     /**
-     * 根据 pid 和table 来解表
+     * 解表
+     * 1）合成 PAT 表
+     * 2）合成 SDT 表
+     * 3）合成 PMT 表
      */
-    private void parseTable(List<Section> list, int pid) {
-        Log.d(TAG, " -- parseTable()");
+    private void parseToTable(List<Section> list, int pid) {
+        Log.d(TAG, " -- parseToTable()");
         if (list == null) {
-            Log.e(TAG, "mSectionList == null !!!");
+            Log.e(TAG, "Section List == null !!!");
             return;
         }
         switch (pid) {
             case PAT_PID:
                 PatManager patManager = new PatManager();
                 mPat = patManager.makePAT(list);
-                mHandler.sendEmptyMessage(ProgramListActivity.REFRESH_UI_PROGRAM_LIST);
+                mHandler.sendEmptyMessage(SelectFileActivity.GET_PAT);
                 break;
 
             case SDT_PID:
                 SdtManager sdtManager = new SdtManager();
                 mSdt = sdtManager.makeSDT(list);
-                mHandler.sendEmptyMessage(ProgramListActivity.REFRESH_UI_PROGRAM_LIST);
+                mHandler.sendEmptyMessage(SelectFileActivity.GET_SDT);
                 break;
 
             default:
                 if (list.get(0).getTableId() == PMT_TABLE_ID) {
-                    // 解 PMT 表
+                    PmtManager pmtManager = new PmtManager();
+                    mPmt = pmtManager.makePMT(list);
                 }
                 break;
         }
     }
+
+    /**
+     * 合成节目列表
+     */
+    public void parseToProgramList() {
+        if (mPat != null && mSdt != null) {
+            ProgramManager programManager = new ProgramManager();
+            mProgramList = programManager.makeProgramList(mPat, mSdt);
+            mHandler.sendEmptyMessage(SelectFileActivity.GET_PROGRAM_LIST);
+        }
+    }
+
 
     public void setOver(boolean over) {
         isOver = over;
@@ -329,6 +347,10 @@ public class PacketManager {
 
     public String getInputFilePath() {
         return mInputFilePath;
+    }
+
+    public void setInputFilePath(String mInputFilePath) {
+        this.mInputFilePath = mInputFilePath;
     }
 
     public int getPacketLength() {
@@ -343,8 +365,16 @@ public class PacketManager {
         return mInputPID;
     }
 
+    public void setInputPID(int mInputPID) {
+        this.mInputPID = mInputPID;
+    }
+
     public int getInputTableID() {
         return mInputTableID;
+    }
+
+    public void setInputTableID(int mInputTableID) {
+        this.mInputTableID = mInputTableID;
     }
 
     public void setOutputFilePath(String mOutputFilePath) {
@@ -363,8 +393,28 @@ public class PacketManager {
         return mPat;
     }
 
+    public void setPat(Pat mPat) {
+        this.mPat = mPat;
+    }
+
     public Sdt getSdt() {
         return mSdt;
+    }
+
+    public void setSdt(Sdt mSdt) {
+        this.mSdt = mSdt;
+    }
+
+    public Pmt getPmt() {
+        return mPmt;
+    }
+
+    public void setPmt(Pmt mPmt) {
+        this.mPmt = mPmt;
+    }
+
+    public List<Program> getProgramList() {
+        return mProgramList;
     }
 }
 

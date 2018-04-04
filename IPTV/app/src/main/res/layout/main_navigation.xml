@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/main_navigation_ll_height"
+    android:background="@color/main_navigation_bg_color"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:id="@+id/ll_live"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/iv_live"
+            android:layout_width="@dimen/main_navigation_live_iv_width"
+            android:layout_height="@dimen/main_navigation_live_iv_height"
+            android:src="@drawable/main_navigation_live_iv_status" />
+
+        <TextView
+            android:id="@+id/tv_live"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/main_navigation_tv_live"
+            android:textColor="@drawable/main_navigation_text_status"
+            android:textSize="@dimen/main_navigation_text_size" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/ll_about"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/iv_about"
+            android:layout_width="@dimen/main_navigation_about_iv_width"
+            android:layout_height="@dimen/main_navigation_about_iv_height"
+            android:src="@drawable/main_navigation_about_iv_status" />
+
+        <TextView
+            android:id="@+id/tv_about"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/main_navigation_tv_about"
+            android:textColor="@drawable/main_navigation_text_status"
+            android:textSize="@dimen/main_navigation_text_size" />
+    </LinearLayout>
+
+</LinearLayout>

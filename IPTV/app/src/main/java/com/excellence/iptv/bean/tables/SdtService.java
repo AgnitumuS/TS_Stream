@@ -1,4 +1,4 @@
-package com.tosmart.tsgetsdt.beans.tables;
+package com.excellence.iptv.bean.tables;
 
 /**
  * Sdt

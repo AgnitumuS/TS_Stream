@@ -9,7 +9,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.tosmart.tsgetsdt.R;
-import com.tosmart.tsgetsdt.beans.tables.PatProgram;
+import com.tosmart.tsgetsdt.beans.tables.SdtService;
 
 import java.util.List;
 
@@ -25,22 +25,22 @@ import static java.lang.Integer.toHexString;
 public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private Context mContext;
-    private List<PatProgram> mList;
+    private List<SdtService> mList;
 
     class MyViewHolder extends RecyclerView.ViewHolder {
         View itemView;
-        TextView programNumTv;
-        TextView programMapPidTv;
+        TextView serviceIdTv;
+        TextView serviceNameTv;
 
         public MyViewHolder(View v) {
             super(v);
             itemView = v;
-            programNumTv = v.findViewById(R.id.tv_program_number);
-            programMapPidTv = v.findViewById(R.id.tv_program_map_pid);
+            serviceIdTv = v.findViewById(R.id.tv_service_id);
+            serviceNameTv = v.findViewById(R.id.tv_service_name);
         }
     }
 
-    public ProgramListAdapter(Context context, List<PatProgram> list) {
+    public ProgramListAdapter(Context context, List<SdtService> list) {
         super();
         this.mContext = context;
         this.mList = list;
@@ -62,22 +62,16 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         MyViewHolder myViewHolder = (MyViewHolder) holder;
-        String str = "0x" + toHexString(mList.get(position).getProgramNumber());
-        String strResult = mContext.getResources().getString(R.string.program_list_item_tv_program_number_result);
+        String str = "0x" + toHexString(mList.get(position).getServiceId());
+        String strResult = mContext.getResources().getString(R.string.program_list_item_tv_service_id_result);
         str = String.format(strResult, str);
-        myViewHolder.programNumTv.setText(str);
+        myViewHolder.serviceIdTv.setText(str);
 
-        str = "0x" + toHexString(mList.get(position).getProgramMapPid());
-        strResult = mContext.getResources().getString(R.string.program_list_item_tv_program_map_pid_result);
+        str = mList.get(position).getServiceName();
+        strResult = mContext.getResources().getString(R.string.program_list_item_tv_service_name_result);
         str = String.format(strResult, str);
-        myViewHolder.programMapPidTv.setText(str);
+        myViewHolder.serviceNameTv.setText(str);
 
-        myViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(mContext, "prepare to parse PMT info", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     @Override

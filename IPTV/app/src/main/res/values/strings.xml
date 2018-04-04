@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">IPTV</string>
+
+    <string name="select_file_tv_title">Select TS File</string>
+    <string name="select_file_item_tv_file_name">%1$s</string>
+    <string name="select_file_popup_tv_waiting">Waiting</string>
+
+    <string name="main_navigation_tv_live">Live</string>
+    <string name="main_navigation_tv_about">About</string>
+
+    <string name="live_search_et_hint">Please input Channel Num.</string>
+    <string name="live_item_tv_program_num">000</string>
+    <string name="live_item_tv_program_num_result">%1$d</string>
+    <string name="live_item_tv_program_name">Program Name</string>
+    <string name="live_item_tv_program_name_result">%1$s</string>
+    <string name="live_item_tv_eit_time">00:00\-10:00</string>
+    <string name="live_item_tv_eit_name">No EPG</string>
+
+    <string name="about_tv_title">About</string>
+    <string name="about_tv_logo">F·TV</string>
+    <string name="about_tv_about_app">About APP</string>
+    <string name="about_tv_about_version">V1.3.0</string>
+    <string name="about_tv_update">Check Update</string>
+
+    <string name="search_btn_cancel">Cancel</string>
+    <string name="search_tv_history">Search History</string>
+
+    <string name="favorite_tv_title">Favorite</string>
+
+</resources>

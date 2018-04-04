@@ -1,11 +1,11 @@
-package com.tosmart.tsgetsdt.utils;
+package com.excellence.iptv.util;
 
 
 import android.util.Log;
 
-import com.tosmart.tsgetsdt.beans.Section;
-import com.tosmart.tsgetsdt.beans.tables.Sdt;
-import com.tosmart.tsgetsdt.beans.tables.SdtService;
+import com.excellence.iptv.bean.Section;
+import com.excellence.iptv.bean.tables.Sdt;
+import com.excellence.iptv.bean.tables.SdtService;
 
 import java.util.ArrayList;
 import java.util.List;

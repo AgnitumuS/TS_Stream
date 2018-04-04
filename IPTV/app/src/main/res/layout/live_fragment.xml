@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/live_actionbar_ll_height"
+        android:background="@color/colorRed"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/ll_search"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/margin_micro_super"
+            android:layout_weight="1"
+            android:background="@drawable/live_search_bg"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="@dimen/live_search_tv_height"
+                android:layout_marginLeft="@dimen/margin_micro"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:text="@string/live_search_et_hint"
+                android:textColor="@color/live_search_text_color"
+                android:textSize="@dimen/live_search_text_size" />
+
+            <ImageView
+                android:layout_width="@dimen/live_search_iv_width"
+                android:layout_height="@dimen/live_search_iv_height"
+                android:layout_marginLeft="@dimen/margin_micro_super"
+                android:layout_marginRight="@dimen/margin_micro_super"
+                android:src="@drawable/ic_search" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/iv_favorite"
+            android:layout_width="@dimen/live_favorite_iv_width"
+            android:layout_height="@dimen/live_favorite_iv_height"
+            android:layout_marginLeft="@dimen/margin_micro_little"
+            android:layout_marginRight="@dimen/margin_little_little"
+            android:src="@drawable/ic_fav" />
+    </LinearLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_program_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="@dimen/main_navigation_ll_height" />
+
+</LinearLayout>

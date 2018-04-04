@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="colorRed">#D42020</color>
+    <color name="colorRedDark">#AA1A1A</color>
+    <color name="colorWhite">#FFFFFF</color>
+    <color name="colorBlack">#000000</color>
+
+    <!-- select file item -->
+    <color name="select_file_item_text_color">#1c1a1a</color>
+    <color name="select_file_item_line_color">#d9d9d9</color>
+    <!-- select file popup window -->
+    <color name="select_file_popup_window_bg_color">#404040</color>
+
+
+    <!-- main navigation -->
+    <color name="main_navigation_bg_color">#1c1a1a</color>
+    <color name="main_navigation_text_normal_color">#4dffffff</color>
+    <color name="main_navigation_text_select_color">#fefefe</color>
+
+    <!-- live fragment -->
+    <color name="live_search_text_color">#991c1a1a</color>
+    <color name="live_search_edit_text_color">#1c1a1a</color>
+    <!-- live item -->
+    <color name="live_item_program_name_text_color">#1c1a1a</color>
+    <color name="live_item_program_eit_text_color">#8c8a8a</color>
+    <color name="live_item_line_color">#d9d9d9</color>
+
+    <!-- about fragment -->
+    <color name="about_text_color">#403d3d</color>
+    <color name="about_item_line_color">#d9d9d9</color>
+
+    <!-- search item -->
+    <color name="search_item_text_color">#403d3d</color>
+    <color name="search_item_bg_color">#e6e6e6</color>
+</resources>
