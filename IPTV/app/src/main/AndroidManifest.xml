@@ -15,22 +15,16 @@
         <activity
             android:name=".SelectFileActivity"
             android:launchMode="singleTask">
-
-        </activity>
-
-        <activity
-            android:name=".MainActivity"
-            android:launchMode="singleTask" />
-
-        <activity
-            android:name=".SearchActivity"
-            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleTask" />
 
         <activity
             android:name=".FavoriteActivity"

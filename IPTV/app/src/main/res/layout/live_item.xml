@@ -48,6 +48,16 @@
             android:text="@string/live_item_tv_eit_name"
             android:textColor="@color/live_item_program_eit_text_color"
             android:textSize="@dimen/live_item_text_size" />
+
+        <ImageView
+            android:id="@+id/iv_add_fav"
+            android:layout_width="@dimen/live_item_add_favorite_iv_width"
+            android:layout_height="@dimen/live_item_add_favorite_iv_height"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="@dimen/margin_little_little"
+            android:src="@drawable/live_item_favourite_status" />
+
     </RelativeLayout>
 
     <View

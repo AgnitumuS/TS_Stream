@@ -18,6 +18,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.Animation;
@@ -79,6 +80,7 @@ public class SelectFileActivity extends AppCompatActivity {
 
     private MyHandler mHandler = new MyHandler(this);
 
+    private long mExitTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -352,4 +354,20 @@ public class SelectFileActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // 双击返回键退出应用
+        if(keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0){
+            if((System.currentTimeMillis() - mExitTime) > 2000){
+                Toast.makeText(this, "再按一次退出程序", Toast.LENGTH_SHORT).show();
+                mExitTime = System.currentTimeMillis();
+            } else {
+                // 销毁 ActivityCollector.activityList 的 Activity
+//                ActivityCollector.finishAll();
+                finish();
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
 }

@@ -91,7 +91,8 @@
     <!-- live item -->
     <dimen name="live_item_ll_height">56dp</dimen>
     <dimen name="live_item_text_size">14sp</dimen>
-
+    <dimen name="live_item_add_favorite_iv_width">22dp</dimen>
+    <dimen name="live_item_add_favorite_iv_height">20dp</dimen>
 
     <!-- about fragment -->
     <dimen name="about_actionbar_rl_height">45dp</dimen>
@@ -113,6 +114,9 @@
     <!-- search item -->
     <dimen name="search_item_tv_height">33dp</dimen>
     <dimen name="search_item_text_size">14sp</dimen>
+    <dimen name="search_item_delete_iv_width">15dp</dimen>
+    <dimen name="search_item_delete_iv_height">15dp</dimen>
+    <dimen name="search_item_delete_iv_margin_left">-10dp</dimen>
 
     <!-- favorite activity -->
     <dimen name="favorite_actionbar_rl_height">45dp</dimen>

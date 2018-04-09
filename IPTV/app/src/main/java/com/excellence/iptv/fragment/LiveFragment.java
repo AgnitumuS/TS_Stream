@@ -11,13 +11,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 
 import com.excellence.iptv.FavoriteActivity;
 import com.excellence.iptv.MainActivity;
 import com.excellence.iptv.R;
-import com.excellence.iptv.SearchActivity;
-import com.excellence.iptv.adapter.FileListAdapter;
 import com.excellence.iptv.adapter.ProgramListAdapter;
 import com.excellence.iptv.bean.Program;
 
@@ -33,11 +30,13 @@ import java.util.List;
 
 public class LiveFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "LiveFragment";
+    public static final String KEY_SEARCH_LIST = "searchList";
 
     private View mView;
     private MainActivity mMainActivity;
 
     private List<Program> mProgramList = new ArrayList<>();
+    private ProgramListAdapter mProgramListAdapter;
 
     @Nullable
     @Override
@@ -46,13 +45,13 @@ public class LiveFragment extends Fragment implements View.OnClickListener {
         mMainActivity = (MainActivity) getActivity();
 
         // 从 Activity 获取节目列表数据
-        List<Program> list = mMainActivity.getProgramList();
-        if (list != null) {
-            mProgramList.clear();
-            for (Program program : list) {
-                mProgramList.add(program);
-            }
-        }
+        mProgramList = mMainActivity.getProgramList();
+//        if (list != null) {
+//            mProgramList.clear();
+//            for (Program program : list) {
+//                mProgramList.add(program);
+//            }
+//        }
 
         initView(mView);
 
@@ -73,8 +72,8 @@ public class LiveFragment extends Fragment implements View.OnClickListener {
         RecyclerView recyclerView = v.findViewById(R.id.rv_program_list);
         LinearLayoutManager layoutManager = new LinearLayoutManager(mMainActivity);
         recyclerView.setLayoutManager(layoutManager);
-        ProgramListAdapter programListAdapter = new ProgramListAdapter(mMainActivity, mProgramList);
-        recyclerView.setAdapter(programListAdapter);
+        mProgramListAdapter = new ProgramListAdapter(mMainActivity, mProgramList);
+        recyclerView.setAdapter(mProgramListAdapter);
     }
 
 
@@ -82,8 +81,7 @@ public class LiveFragment extends Fragment implements View.OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.ll_search:
-                Intent intent = new Intent(mMainActivity, SearchActivity.class);
-                startActivity(intent);
+                mMainActivity.showContent(MainActivity.SEARCH_FRAGMENT);
                 break;
 
             case R.id.iv_favorite:

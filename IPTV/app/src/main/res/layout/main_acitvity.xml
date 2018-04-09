@@ -9,6 +9,7 @@
         android:layout_height="match_parent" />
 
     <LinearLayout
+        android:id="@+id/ll_nav"
         android:layout_width="match_parent"
         android:layout_height="@dimen/main_navigation_ll_height"
         android:layout_alignParentBottom="true">

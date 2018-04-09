@@ -13,6 +13,8 @@ public class Program {
     private int programMapPid;
     private String programName;
 
+    private boolean isFavorite = false;
+
     public Program(int programNumber, int programMapPid, String programName) {
         super();
         this.programNumber = programNumber;
@@ -29,7 +31,7 @@ public class Program {
     }
 
     public String getProgramName() {
-        return programName;
+        return this.programName;
     }
 
     public void setProgramName(String programName) {
@@ -37,10 +39,18 @@ public class Program {
     }
 
     public int getProgramMapPid() {
-        return programMapPid;
+        return this.programMapPid;
     }
 
     public void setProgramMapPid(int programMapPid) {
         this.programMapPid = programMapPid;
+    }
+
+    public boolean getIsFavorite() {
+        return this.isFavorite;
+    }
+
+    public void setIsFavorite(boolean favorite) {
+        this.isFavorite = favorite;
     }
 }

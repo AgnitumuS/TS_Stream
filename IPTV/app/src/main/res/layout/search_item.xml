@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
 
-    <LinearLayout
+    <RelativeLayout
+        android:id="@+id/rl_search_frame"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/search_item_tv_height"
+        android:layout_marginTop="@dimen/margin_micro_super_super"
+        android:paddingLeft="@dimen/padding_micro_little"
+        android:paddingRight="@dimen/padding_micro_little"
         android:background="@drawable/search_item_bg"
-        android:gravity="center"
-        android:paddingLeft="@dimen/padding_little_little"
-        android:paddingRight="@dimen/padding_little_little">
+        android:gravity="center">
 
         <TextView
             android:id="@+id/tv_search_item_name"
@@ -19,8 +20,14 @@
             android:text="@string/search_tv_history"
             android:textColor="@color/search_item_text_color"
             android:textSize="@dimen/search_item_text_size" />
+    </RelativeLayout>
 
-    </LinearLayout>
-
-
-</LinearLayout>
+    <ImageView
+        android:id="@+id/iv_search_item_delete"
+        android:layout_width="@dimen/search_item_delete_iv_width"
+        android:layout_height="@dimen/search_item_delete_iv_height"
+        android:layout_marginLeft="@dimen/search_item_delete_iv_margin_left"
+        android:layout_toRightOf="@+id/rl_search_frame"
+        android:src="@drawable/icon_delete"
+        android:visibility="invisible"/>
+</RelativeLayout>
