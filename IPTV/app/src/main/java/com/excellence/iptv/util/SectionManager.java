@@ -33,6 +33,7 @@ public class SectionManager {
 
 
     private List<Section> mSectionList = new ArrayList<>();
+
     private boolean isFinishOne = false;
 
 
@@ -222,7 +223,6 @@ public class SectionManager {
         }
 
         if (isFinishOne) {
-            isFinishOne = false;
             return 1;
         }
 
@@ -249,7 +249,7 @@ public class SectionManager {
 
     public List<Section> getSectionList() {
         if (mSectionList.size() == 0) {
-            Log.e(TAG, "no match section ");
+            Log.e(TAG, "no matchArray section ");
             return null;
         }
         return mSectionList;
@@ -257,7 +257,7 @@ public class SectionManager {
 
     public void print() {
         if (mList == null) {
-            Log.e(TAG, "no match section ");
+            Log.e(TAG, "no matchArray section ");
             return;
         }
         Log.d(TAG, " --------------------------------------------------------------------------- ");
@@ -279,5 +279,9 @@ public class SectionManager {
 
     }
 
+
+    public boolean getIsFinishOne() {
+        return isFinishOne;
+    }
 
 }

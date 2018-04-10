@@ -1,5 +1,7 @@
 package com.excellence.iptv.bean;
 
+import java.io.Serializable;
+
 /**
  * Program
  *
@@ -7,7 +9,7 @@ package com.excellence.iptv.bean;
  * @date 2018/4/4
  */
 
-public class Program {
+public class Program implements Serializable {
 
     private int programNumber;
     private int programMapPid;

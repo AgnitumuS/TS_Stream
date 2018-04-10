@@ -118,10 +118,15 @@
     <dimen name="search_item_delete_iv_height">15dp</dimen>
     <dimen name="search_item_delete_iv_margin_left">-10dp</dimen>
 
-    <!-- favorite activity -->
+    <!-- favorite fragment -->
     <dimen name="favorite_actionbar_rl_height">45dp</dimen>
     <dimen name="favorite_back_iv_width">12dp</dimen>
     <dimen name="favorite_back_iv_height">21dp</dimen>
-
+    <!-- favorite item -->
+    <dimen name="favorite_item_program_pic_iv_width">120dp</dimen>
+    <dimen name="favorite_item_program_pic_iv_height">80dp</dimen>
+    <dimen name="favorite_item_delete_iv_width">15dp</dimen>
+    <dimen name="favorite_item_delete_iv_height">15dp</dimen>
+    <dimen name="favorite_item_text_size">14sp</dimen>
 
 </resources>

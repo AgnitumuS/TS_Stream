@@ -27,5 +27,6 @@
     <string name="search_item_tv_tag_name_result">%1$s</string>
 
     <string name="favorite_tv_title">Favorite</string>
+    <string name="favorite_item_tv_program_info_result">%1$d %2$s</string>
 
 </resources>

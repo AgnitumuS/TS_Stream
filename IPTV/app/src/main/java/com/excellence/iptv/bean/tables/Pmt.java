@@ -1,5 +1,6 @@
 package com.excellence.iptv.bean.tables;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +13,7 @@ import static java.lang.Integer.toHexString;
  * @date 2018/3/29
  */
 
-public class Pmt {
+public class Pmt implements Serializable {
 
     /**
      * table_id : 8 bit

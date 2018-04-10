@@ -26,9 +26,6 @@
             android:name=".MainActivity"
             android:launchMode="singleTask" />
 
-        <activity
-            android:name=".FavoriteActivity"
-            android:launchMode="singleTask" />
     </application>
 
 </manifest>

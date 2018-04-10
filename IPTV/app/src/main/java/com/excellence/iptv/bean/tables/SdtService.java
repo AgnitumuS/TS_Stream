@@ -1,5 +1,7 @@
 package com.excellence.iptv.bean.tables;
 
+import java.io.Serializable;
+
 /**
  * Sdt
  *
@@ -7,7 +9,7 @@ package com.excellence.iptv.bean.tables;
  * @date 2018/3/31
  */
 
-public class SdtService {
+public class SdtService implements Serializable {
 
     /**
      * service_id : 16 bit

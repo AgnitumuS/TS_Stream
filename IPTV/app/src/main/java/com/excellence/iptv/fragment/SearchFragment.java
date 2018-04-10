@@ -11,23 +11,19 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.excellence.iptv.MainActivity;
 import com.excellence.iptv.R;
 import com.excellence.iptv.adapter.ProgramListAdapter;
-import com.excellence.iptv.adapter.TagAdapter;
 import com.excellence.iptv.bean.Program;
 import com.excellence.iptv.broadcast.MyActoin;
 import com.excellence.iptv.view.FlowLayout;
@@ -38,10 +34,7 @@ import com.rengwuxian.materialedittext.MaterialEditText;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.gujun.android.taggroup.TagGroup;
-
 import static android.content.Context.INPUT_METHOD_SERVICE;
-import static android.content.Context.MODE_PRIVATE;
 
 /**
  * SearchFragment
@@ -71,8 +64,6 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
     private ProgramListAdapter mSearchResultListAdapter;
 
     private FlowLayout mFlowLayout;
-    private Boolean isEditMode = false;
-    private List<String> mHistoryTagList = new ArrayList<>();
 
     @Nullable
     @Override
@@ -82,19 +73,13 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
 
         // 从 Activity 获取节目列表数据
         mProgramList = mMainActivity.getProgramList();
-//        if (list != null) {
-//            mProgramList.clear();
-//            for (Program program : list) {
-//                mProgramList.add(program);
-//            }
-//        }
 
         // 注册本地广播监听器
         initLocalBroadcast();
 
         initView(mView);
 
-        initData();
+        initHistoryTagData();
 
         // 初始化 MaterialEditText
         initMaterialEditText(mView);
@@ -132,7 +117,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         clearTagIv.setOnClickListener(this);
     }
 
-    private void initData() {
+    private void initHistoryTagData() {
         // 读取 SharedPreferences 里面的 History Tag
         SharedPreferences sp = mMainActivity.getPreferences(Context.MODE_PRIVATE);
         String json = sp.getString(KEY_SP_HISTORY_TAG, null);
@@ -232,6 +217,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
 
             case R.id.iv_clear_tag:
                 mFlowLayout.cleanTag();
+                mFlowLayout.editMode(false);
                 break;
 
             default:
@@ -249,7 +235,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
     /**
      * 监听本地广播
      */
-    class MyLocalReceiver extends BroadcastReceiver {
+    private class MyLocalReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -267,15 +253,16 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
         mLocalBroadcastManager.unregisterReceiver(mLocalReceiver);
+
         // History Tag 存入 SharedPreferences
         List<String> list = mFlowLayout.getHistoryTagList();
-        if (list.size() != 0) {
-            String json = new Gson().toJson(list);
-            SharedPreferences.Editor editor = mMainActivity.getPreferences(Context.MODE_PRIVATE).edit();
-            editor.putString(KEY_SP_HISTORY_TAG, json);
-            editor.apply();
-        }
+        String json = new Gson().toJson(list);
+        SharedPreferences.Editor editor = mMainActivity.getPreferences(Context.MODE_PRIVATE).edit();
+        editor.putString(KEY_SP_HISTORY_TAG, json);
+        editor.apply();
+
 
     }
 }

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/margin_micro_super_super">
+
+    <ImageView
+        android:id="@+id/iv_favorite_item_program_pic"
+        android:layout_width="@dimen/favorite_item_program_pic_iv_width"
+        android:layout_height="@dimen/favorite_item_program_pic_iv_height"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:id="@+id/tv_favorite_item_program_info"
+        android:layout_width="@dimen/favorite_item_program_pic_iv_width"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/iv_favorite_item_program_pic"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:singleLine="true"
+        android:textSize="@dimen/favorite_item_text_size" />
+
+    <ImageView
+        android:id="@+id/iv_favorite_item_delete_icon"
+        android:layout_width="@dimen/favorite_item_delete_iv_width"
+        android:layout_height="@dimen/favorite_item_delete_iv_height"
+        android:layout_alignRight="@+id/iv_favorite_item_program_pic"
+        android:layout_marginRight="@dimen/margin_micro_super_super"
+        android:layout_marginTop="@dimen/margin_micro_super_super"
+        android:scaleType="fitXY"
+        android:src="@drawable/icon_delete"
+        android:visibility="invisible" />
+
+</RelativeLayout>

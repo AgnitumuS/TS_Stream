@@ -1,5 +1,6 @@
 package com.excellence.iptv.bean.tables;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
  * @date 2018/3/27
  */
 
-public class Pat {
+public class Pat implements Serializable {
 
     /**
      * tableId : 8 bit

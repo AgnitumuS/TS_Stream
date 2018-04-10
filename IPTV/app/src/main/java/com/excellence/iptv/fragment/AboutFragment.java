@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.excellence.iptv.MainActivity;
 import com.excellence.iptv.R;
 
 /**
@@ -20,11 +21,14 @@ public class AboutFragment extends Fragment {
     private static final String TAG = "AboutFragment";
 
     private View mView;
+    private MainActivity mMainActivity;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mView = inflater.inflate(R.layout.about_fragment, container, false);
+        mMainActivity = (MainActivity) getActivity();
+
 
         return mView;
     }

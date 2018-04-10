@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.excellence.iptv.FavoriteActivity;
 import com.excellence.iptv.MainActivity;
 import com.excellence.iptv.R;
 import com.excellence.iptv.adapter.ProgramListAdapter;
@@ -46,12 +45,6 @@ public class LiveFragment extends Fragment implements View.OnClickListener {
 
         // 从 Activity 获取节目列表数据
         mProgramList = mMainActivity.getProgramList();
-//        if (list != null) {
-//            mProgramList.clear();
-//            for (Program program : list) {
-//                mProgramList.add(program);
-//            }
-//        }
 
         initView(mView);
 
@@ -76,7 +69,6 @@ public class LiveFragment extends Fragment implements View.OnClickListener {
         recyclerView.setAdapter(mProgramListAdapter);
     }
 
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -85,8 +77,7 @@ public class LiveFragment extends Fragment implements View.OnClickListener {
                 break;
 
             case R.id.iv_favorite:
-                Intent intent2 = new Intent(mMainActivity, FavoriteActivity.class);
-                startActivity(intent2);
+                mMainActivity.showContent(MainActivity.FAVORITE_FRAGMENT);
                 break;
 
             default:

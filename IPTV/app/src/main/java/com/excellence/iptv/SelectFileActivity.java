@@ -31,7 +31,10 @@ import android.widget.Toast;
 
 import com.excellence.iptv.adapter.FileListAdapter;
 import com.excellence.iptv.bean.Program;
-import com.excellence.iptv.thread.GetPatSdtThread;
+import com.excellence.iptv.bean.Ts;
+import com.excellence.iptv.bean.tables.PatProgram;
+import com.excellence.iptv.bean.tables.Pmt;
+import com.excellence.iptv.thread.TsThread;
 import com.excellence.iptv.util.PacketManager;
 import com.google.gson.Gson;
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
@@ -61,24 +64,27 @@ public class SelectFileActivity extends AppCompatActivity {
     private static final int PAT_TABLE_ID = 0x00;
     private static final int SDT_PID = 0x0011;
     private static final int SDT_TABLE_ID = 0x42;
+    private static final int PMT_TABLE_ID = 0x02;
     public static final int GET_PAT = 0;
     public static final int GET_SDT = 1;
     public static final int GET_PROGRAM_LIST = 2;
-    public static final String KEY_DATA = "data";
+    public static final int GET_ALL_PMT = 3;
+    public static final String KEY_TS_DATA = "TsData";
 
     private Typeface mTypeface;
     private SmartRefreshLayout mRefreshLayout;
     private FileListAdapter mFileListAdapter;
     private PopupWindow mPopupWindow;
 
-    private List<String> mFileList = new ArrayList<>();
+    private List<String> mFileNameList = new ArrayList<>();
     private List<String> mFilePathList = new ArrayList<>();
     private String mInputFilePath;
 
     private PacketManager mPacketManager;
 
-
     private MyHandler mHandler = new MyHandler(this);
+
+    private List<TsThread> mTsThreadList = new ArrayList<>();
 
     private long mExitTime;
 
@@ -97,9 +103,10 @@ public class SelectFileActivity extends AppCompatActivity {
         }
 
         // 遍历 ts 文件夹
-        mFileList.clear();
+        mFileNameList.clear();
         mFilePathList.clear();
         traverseTsFile(TS_FOLDER_PATH);
+
         // 显示文件列表
         initRecyclerView();
         initSmartRefreshLayout();
@@ -131,13 +138,15 @@ public class SelectFileActivity extends AppCompatActivity {
                 traverseTsFile(files[i].getAbsolutePath());
             } else {
                 String fileName = files[i].getName();
-                int j = fileName.lastIndexOf(".");
-                String suffix = fileName.substring(j + 1);
-                // 判断后缀
-                if (suffix.equalsIgnoreCase("ts")) {
-                    mFileList.add(fileName);
-                    mFilePathList.add(files[i].getAbsolutePath());
-                }
+                mFileNameList.add(fileName);
+                mFilePathList.add(files[i].getAbsolutePath());
+//                //判断后缀
+//                int j = fileName.lastIndexOf(".");
+//                String suffix = fileName.substring(j + 1);
+//                if (suffix.equalsIgnoreCase("ts")) {
+//                    mFileNameList.add(fileName);
+//                    mFilePathList.add(files[i].getAbsolutePath());
+//                }
             }
         }
     }
@@ -149,7 +158,7 @@ public class SelectFileActivity extends AppCompatActivity {
         RecyclerView fileListRv = findViewById(R.id.recycler_view_file_list);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         fileListRv.setLayoutManager(layoutManager);
-        mFileListAdapter = new FileListAdapter(this, mFileList, mTypeface);
+        mFileListAdapter = new FileListAdapter(this, mFileNameList, mTypeface);
         fileListRv.setAdapter(mFileListAdapter);
 
         // OnItemClick
@@ -161,30 +170,22 @@ public class SelectFileActivity extends AppCompatActivity {
                 // 显示 loading 提示框
                 showPopupWindow();
 
-                // 获取 PAT
-                afxBeginThread(mInputFilePath, PAT_PID, PAT_TABLE_ID);
-                // 获取 SDT
-                afxBeginThread(mInputFilePath, SDT_PID, SDT_TABLE_ID);
+                mPacketManager = new PacketManager(mHandler);
+                // 开启线程，扫描一次文件，获取 PAT SDT
+                int[][] searchArray = new int[2][2];
+                searchArray[0][0] = PAT_PID;
+                searchArray[0][1] = PAT_TABLE_ID;
+                searchArray[1][0] = SDT_PID;
+                searchArray[1][1] = SDT_TABLE_ID;
+                afxBeginThreadGetData(searchArray);
             }
         });
     }
 
-    /**
-     * 开启线程
-     */
-    private void afxBeginThread(String inputFilePath, int inputPID, int inputTableId) {
-
-        // mPacketManager 用于获取并记录数据
-        if (mPacketManager == null) {
-            mPacketManager = new PacketManager(mHandler);
-        }
-        // 新建线程
-        GetPatSdtThread getPatSdtThread = new GetPatSdtThread(
-                inputFilePath,
-                inputPID,
-                inputTableId,
-                mPacketManager);
-        getPatSdtThread.start();
+    private void afxBeginThreadGetData(int[][] searchArray) {
+        TsThread tsThread = new TsThread(mInputFilePath, searchArray, mPacketManager);
+        mTsThreadList.add(tsThread);
+        tsThread.start();
     }
 
     /**
@@ -196,7 +197,7 @@ public class SelectFileActivity extends AppCompatActivity {
             @Override
             public void onRefresh(RefreshLayout refreshlayout) {
                 if (requestPermission()) {
-                    mFileList.clear();
+                    mFileNameList.clear();
                     mFilePathList.clear();
                     traverseTsFile(TS_FOLDER_PATH);
                     mFileListAdapter.notifyDataSetChanged();
@@ -228,7 +229,7 @@ public class SelectFileActivity extends AppCompatActivity {
         View view = LayoutInflater.from(this).inflate(R.layout.select_file_popup_window, null);
 
         mPopupWindow = new PopupWindow(view,
-                screenWidth / 2, screenHeight / 5, true);
+                560, 353, true);
         mPopupWindow.setContentView(view);
 
         // 播放读取中的旋转动画
@@ -283,6 +284,17 @@ public class SelectFileActivity extends AppCompatActivity {
                 switch (msg.what) {
                     case GET_PAT:
                         isGetPAT = true;
+
+                        // 获取 PAT 后，根据得到的 programMapPid 解出对应 PMT
+                        List<PatProgram> patProgramList =
+                                selectFileActivity.mPacketManager.getPat().getPatProgramList();
+                        int[][] searchArray = new int[patProgramList.size()][2];
+                        for (int i = 0; i < patProgramList.size(); i++) {
+                            searchArray[i][0] = patProgramList.get(i).getProgramMapPid();
+                            searchArray[i][1] = PMT_TABLE_ID;
+                        }
+                        // 新建线程，并将其加入 List<Thread>
+                        selectFileActivity.afxBeginThreadGetData(searchArray);
                         break;
 
                     case GET_SDT:
@@ -290,16 +302,20 @@ public class SelectFileActivity extends AppCompatActivity {
                         break;
 
                     case GET_PROGRAM_LIST:
+                        break;
+
+                    case GET_ALL_PMT:
                         selectFileActivity.mPopupWindow.dismiss();
 
-                        List<Program> list = selectFileActivity.mPacketManager.getProgramList();
-                        String data = "null";
-                        if (list != null) {
-                            data = new Gson().toJson(list);
-                        }
+                        Ts ts = new Ts();
+                        ts.setFilePath(selectFileActivity.mPacketManager.getInputFilePath());
+                        ts.setPat(selectFileActivity.mPacketManager.getPat());
+                        ts.setSdt(selectFileActivity.mPacketManager.getSdt());
+                        ts.setPmtList(selectFileActivity.mPacketManager.getPmtList());
+                        ts.setProgramList(selectFileActivity.mPacketManager.getProgramList());
 
                         Intent intent = new Intent(selectFileActivity, MainActivity.class);
-                        intent.putExtra(KEY_DATA, data);
+                        intent.putExtra(KEY_TS_DATA, ts);
                         selectFileActivity.startActivity(intent);
                         break;
 
@@ -357,8 +373,8 @@ public class SelectFileActivity extends AppCompatActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         // 双击返回键退出应用
-        if(keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0){
-            if((System.currentTimeMillis() - mExitTime) > 2000){
+        if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
+            if ((System.currentTimeMillis() - mExitTime) > 2000) {
                 Toast.makeText(this, "再按一次退出程序", Toast.LENGTH_SHORT).show();
                 mExitTime = System.currentTimeMillis();
             } else {

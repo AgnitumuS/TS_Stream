@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -16,16 +17,19 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.excellence.iptv.bean.Program;
+import com.excellence.iptv.bean.Ts;
 import com.excellence.iptv.broadcast.MyActoin;
 import com.excellence.iptv.fragment.AboutFragment;
+import com.excellence.iptv.fragment.FavoriteFragment;
 import com.excellence.iptv.fragment.LiveFragment;
 import com.excellence.iptv.fragment.SearchFragment;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -40,8 +44,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int LIVE_FRAGMENT = 0;
     private static final int ABOUT_FRAGMENT = 1;
     public static final int SEARCH_FRAGMENT = 2;
+    public static final int FAVORITE_FRAGMENT = 3;
 
-    private String mData = "null";
+    private Ts mTs;
+
     private List<Program> mProgramList;
 
     private LinearLayout mNavigationLl;
@@ -50,8 +56,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     int mFragmentPos;
     private FragmentManager mFragmentManager;
-    private Fragment mLiveFragment, mAboutFragment, mSearchFragment;
-    private String[] tags = new String[]{"LiveFragment", "AboutFragment", "SearchFragment"};
+    private Fragment mLiveFragment, mAboutFragment, mSearchFragment, mFavoriteFragment;
+    private String[] tags = new String[]{"LiveFragment", "AboutFragment", "SearchFragment", "FavoriteFragment"};
 
     private MyLocalReceiver mLocalReceiver;
     private LocalBroadcastManager mLocalBroadcastManager;
@@ -62,22 +68,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_acitvity);
 
-        // 获取节目列表数据
-        mData = getIntent().getStringExtra(SelectFileActivity.KEY_DATA);
-        if (!mData.equals("null")) {
-            mProgramList = new Gson().fromJson(mData, new TypeToken<List<Program>>() {
-            }.getType());
-        }
+        // 获取 TS 对象
+        mTs = (Ts) getIntent().getSerializableExtra(SelectFileActivity.KEY_TS_DATA);
+        mProgramList = mTs.getProgramList();
 
+        // 比对历史的节目列表
+        initProgramList(mTs);
+
+        // 本地广播
         initLocalBroadcast();
 
-        initView();
+        // 初始化底部导航栏
+        initNavView();
 
-
-        // 默认
+        // 默认显示的 Fragment
         mFragmentPos = LIVE_FRAGMENT;
         resetSelected(mFragmentPos);
         showContent(LIVE_FRAGMENT);
+    }
+
+    private void initProgramList(Ts ts) {
+        // 从 SP 中获取喜爱列表
+        SharedPreferences sp = getPreferences(Context.MODE_PRIVATE);
+        String fileName = new File(ts.getFilePath()).getName();
+        String key = fileName;
+        String json = sp.getString(key, null);
+        if (json != null) {
+            List<Program> favoriteList = new Gson().fromJson(json, new TypeToken<List<Program>>() {
+            }.getType());
+
+            for (Program program : favoriteList) {
+                for (int i = 0; i < mProgramList.size(); i++) {
+                    if (mProgramList.get(i).getProgramNumber() == program.getProgramNumber()) {
+                        mProgramList.get(i).setIsFavorite(true);
+                        break;
+                    }
+                }
+            }
+        }
+
     }
 
     private void initLocalBroadcast() {
@@ -86,11 +115,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mIntentFilter.addAction(MyActoin.LIVE_FRAGMENT_BACK_LOCAL_ACTION);
         mIntentFilter.addAction(MyActoin.ABOUT_FRAGMENT_BACK_LOCAL_ACTION);
         mIntentFilter.addAction(MyActoin.SEARCH_FRAGMENT_BACK_LOCAL_ACTION);
+        mIntentFilter.addAction(MyActoin.FAVORITE_FRAGMENT_BACK_LOCAL_ACTION);
         mLocalReceiver = new MyLocalReceiver();
         mLocalBroadcastManager.registerReceiver(mLocalReceiver, mIntentFilter);
     }
 
-    private void initView() {
+    private void initNavView() {
         mNavigationLl = findViewById(R.id.ll_nav);
 
         LinearLayout navLiveLl = findViewById(R.id.ll_live);
@@ -148,59 +178,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mFragmentManager = getSupportFragmentManager();
         }
         FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
-//        hideFragment(fragmentTransaction);
-//        showFragment(fragmentTransaction, to);
         fragmentTransaction.replace(R.id.fl_content, getFragments(to), tags[to]);
         fragmentTransaction.commit();
-    }
-
-    private void hideFragment(FragmentTransaction ft) {
-        if (mLiveFragment != null) {
-            ft.hide(mLiveFragment);
-        }
-        if (mAboutFragment != null) {
-            ft.hide(mAboutFragment);
-        }
-        if (mSearchFragment != null) {
-            ft.hide(mSearchFragment);
-        }
-    }
-
-    private void showFragment(FragmentTransaction ft, int to) {
-        switch (to) {
-            case LIVE_FRAGMENT:
-                mFragmentPos = LIVE_FRAGMENT;
-                if (mLiveFragment == null) {
-                    mLiveFragment = new LiveFragment();
-                    ft.add(R.id.fl_content, mLiveFragment, tags[to]);
-                } else {
-                    ft.show(mLiveFragment);
-                }
-                break;
-
-            case ABOUT_FRAGMENT:
-                mFragmentPos = ABOUT_FRAGMENT;
-                if (mAboutFragment == null) {
-                    mAboutFragment = new AboutFragment();
-                    ft.add(R.id.fl_content, mAboutFragment, tags[to]);
-                } else {
-                    ft.show(mAboutFragment);
-                }
-                break;
-            case SEARCH_FRAGMENT:
-                mFragmentPos = SEARCH_FRAGMENT;
-                if (mSearchFragment == null) {
-                    mSearchFragment = new SearchFragment();
-                    ft.add(R.id.fl_content, mSearchFragment, tags[to]);
-                } else {
-                    ft.show(mSearchFragment);
-                }
-                mNavigationLl.setVisibility(View.GONE);
-                break;
-
-            default:
-                break;
-        }
     }
 
     private Fragment getFragments(int to) {
@@ -222,6 +201,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mFragmentPos = SEARCH_FRAGMENT;
                 mSearchFragment = new SearchFragment();
                 fragment = mSearchFragment;
+                mNavigationLl.setVisibility(View.GONE);
+                break;
+
+            case FAVORITE_FRAGMENT:
+                mFragmentPos = FAVORITE_FRAGMENT;
+                mFavoriteFragment = new FavoriteFragment();
+                fragment = mFavoriteFragment;
+                mNavigationLl.setVisibility(View.GONE);
                 break;
 
             default:
@@ -231,16 +218,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return fragment;
     }
 
-    public String getData() {
-        return mData;
-    }
 
     public List<Program> getProgramList() {
         return mProgramList;
     }
 
 
-    class MyLocalReceiver extends BroadcastReceiver {
+    private class MyLocalReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -249,6 +233,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (action.equals(MyActoin.ABOUT_FRAGMENT_BACK_LOCAL_ACTION)) {
             }
             if (action.equals(MyActoin.SEARCH_FRAGMENT_BACK_LOCAL_ACTION)) {
+                showContent(LIVE_FRAGMENT);
+                mNavigationLl.setVisibility(View.VISIBLE);
+            }
+            if (action.equals(MyActoin.FAVORITE_FRAGMENT_BACK_LOCAL_ACTION)) {
                 showContent(LIVE_FRAGMENT);
                 mNavigationLl.setVisibility(View.VISIBLE);
             }
@@ -270,6 +258,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Intent intent2 = new Intent(MyActoin.SEND_SEARCH_FRAGMENT_LOCAL_ACTION);
                     mLocalBroadcastManager.sendBroadcast(intent2);
                     break;
+                case FAVORITE_FRAGMENT:
+                    Intent intent3 = new Intent(MyActoin.SEND_FAVORITE_FRAGMENT_LOCAL_ACTION);
+                    mLocalBroadcastManager.sendBroadcast(intent3);
+                    break;
+
                 default:
                     break;
             }
@@ -283,5 +276,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         mLocalBroadcastManager.unregisterReceiver(mLocalReceiver);
+
+        // 将收藏列表存入 SharedPreferences
+        List<Program> favoriteList = new ArrayList<>();
+        for (Program program : mProgramList) {
+            if (program.getIsFavorite()) {
+                favoriteList.add(program);
+            }
+        }
+        String json = new Gson().toJson(favoriteList);
+        String fileName = new File(mTs.getFilePath()).getName();
+        String key = fileName;
+        SharedPreferences.Editor editor = getPreferences(Context.MODE_PRIVATE).edit();
+        editor.putString(key, json);
+        editor.apply();
     }
 }

@@ -1,5 +1,7 @@
 package com.excellence.iptv.bean.tables;
 
+import java.io.Serializable;
+
 /**
  * PatProgram
  *
@@ -7,7 +9,7 @@ package com.excellence.iptv.bean.tables;
  * @date 2018/3/27
  */
 
-public class PatProgram {
+public class PatProgram implements Serializable {
 
     /**
      * program_number : 16 bit

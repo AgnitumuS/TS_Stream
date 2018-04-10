@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.Integer.toHexString;
@@ -53,13 +54,15 @@ public class PacketManager {
     private int mInputTableID = -1;
     private int mPacketNum = -1;
 
-    private SectionManager mSectionManager = new SectionManager();
-
-    private List<Program> mProgramList = null;
+    private List<SectionManager> mSectionManagerList = new ArrayList<>();
 
     private Pat mPat = null;
     private Sdt mSdt = null;
     private Pmt mPmt = null;
+
+    private List<Pmt> mPmtList = new ArrayList<>();
+
+    private List<Program> mProgramList = null;
 
 
     /**
@@ -106,9 +109,9 @@ public class PacketManager {
                 Log.d(TAG, "current position : " + mPacketStartPosition +
                         "   0x" + toHexString(tmp));
 
-                // match to 0x47
+                // matchArray to 0x47
                 if (tmp == PACKET_HEADER_SYNC_BYTE) {
-                    Log.d(TAG, "match to 0x" + toHexString(PACKET_HEADER_SYNC_BYTE));
+                    Log.d(TAG, "matchArray to 0x" + toHexString(PACKET_HEADER_SYNC_BYTE));
 
                     /*
                     循环 10 次跳 188
@@ -218,17 +221,22 @@ public class PacketManager {
 
 
     /**
-     * 匹配指定 PID 和 table_id 的 section
+     * 单次匹配指定 PID 和 table_id
      */
-    public int matchPidPacket(String inputFilePath, int inputPID, int inputTableID) {
-        Log.d(TAG, " -- matchPidPacket()");
+    public int matchPidTableId(String inputFilePath, int inputPid, int inputTableId) {
+        Log.d(TAG, " -- matchPidTableId()");
         mInputFilePath = inputFilePath;
-        mInputPID = inputPID;
-        mInputTableID = inputTableID;
+        mInputPID = inputPid;
+        mInputTableID = inputTableId;
         Log.d(TAG, "inputFilePath : " + mInputFilePath);
         Log.d(TAG, "outputFilePath : " + mOutputFilePath);
 
-        // 匹配 PacketLength 和 PacketStartPosition
+        mSectionManagerList.clear();
+        SectionManager sectionManager = new SectionManager();
+        mSectionManagerList.add(sectionManager);
+
+
+        // 获取 PacketLength 和 PacketStartPosition
         matchPacketLength(mInputFilePath);
 
         try {
@@ -264,7 +272,7 @@ public class PacketManager {
                             mPacketNum++;
 
                             // 匹配 section
-                            int result = mSectionManager.matchSection(packet, mInputTableID);
+                            int result = mSectionManagerList.get(0).matchSection(packet, mInputTableID);
 
                             // 写出文件
                             fos.write(buff);
@@ -281,11 +289,10 @@ public class PacketManager {
         }
 
         // 打印 section 结果
-        mSectionManager.print();
+        mSectionManagerList.get(0).print();
 
         // 解表
-        parseToTable(mSectionManager.getSectionList(), mInputPID);
-
+        parseToTable(mSectionManagerList.get(0).getSectionList(), mInputPID);
 
         Log.d(TAG, " ---------------------------------------------- ");
         Log.d(TAG, "the number of the Packet's PID = 0x" + toHexString(mInputPID)
@@ -294,6 +301,93 @@ public class PacketManager {
 
         return mPacketNum;
     }
+
+
+    public int matchArray(String inputFilePath, int[][] searchArray) {
+        Log.d(TAG, " -- matchArray()");
+        mInputFilePath = inputFilePath;
+        Log.d(TAG, "inputFilePath : " + mInputFilePath);
+
+        // 根据数组大小来 new SectionManager
+        mSectionManagerList.clear();
+        for (int i = 0; i < searchArray.length; i++) {
+            SectionManager sectionManager = new SectionManager();
+            mSectionManagerList.add(sectionManager);
+        }
+
+        // 获取 PacketLength 和 PacketStartPosition
+        matchPacketLength(mInputFilePath);
+
+        try {
+            FileInputStream fis = new FileInputStream(mInputFilePath);
+
+            // 跳到包的开始位置
+            long lg = fis.skip(mPacketStartPosition);
+            if (lg != mPacketStartPosition) {
+                Log.e(TAG, "failed to skip " + mPacketStartPosition + "bytes");
+                return -1;
+            }
+
+            int err;
+            do {
+                // 结束查找
+                if (isOver) {
+                    isOver = false;
+                    Log.e(TAG, "isOver !!!");
+                    return -2;
+                }
+
+                byte[] buff = new byte[mPacketLength];
+                err = fis.read(buff);
+                if (err == mPacketLength) {
+                    if (buff[0] == PACKET_HEADER_SYNC_BYTE) {
+                        // 构建 packet 对象
+                        Packet packet = new Packet(buff);
+
+                        // 匹配 pid
+                        for (int i = 0; i < searchArray.length; i++) {
+                            if (packet.getPid() == searchArray[i][0]) {
+                                // 匹配 section
+                                SectionManager sectionManager = mSectionManagerList.get(i);
+                                // 找第一版
+                                if (!sectionManager.getIsFinishOne()) {
+                                    sectionManager.matchSection(packet, searchArray[i][1]);
+                                }
+                                sectionManager.matchSection(packet, searchArray[i][1]);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 全找第一版
+                boolean isFinish = true;
+                for (SectionManager sectionManager : mSectionManagerList) {
+                    if (!sectionManager.getIsFinishOne()) {
+                        isFinish = false;
+                    }
+                }
+                if (isFinish) {
+                    break;
+                }
+
+            } while (err != -1);
+
+            fis.close();
+
+        } catch (IOException e) {
+            Log.e(TAG, "IOException : 打开文件失败");
+            e.printStackTrace();
+        }
+
+        // 解表
+        for (int i = 0; i < searchArray.length; i++) {
+            parseToTable(mSectionManagerList.get(i).getSectionList(), searchArray[i][0]);
+        }
+
+        return 0;
+    }
+
 
     /**
      * 解表
@@ -324,6 +418,10 @@ public class PacketManager {
                 if (list.get(0).getTableId() == PMT_TABLE_ID) {
                     PmtManager pmtManager = new PmtManager();
                     mPmt = pmtManager.makePMT(list);
+                    mPmtList.add(mPmt);
+                    if (mPmtList.size() == mPat.getPatProgramList().size()) {
+                        mHandler.sendEmptyMessage(SelectFileActivity.GET_ALL_PMT);
+                    }
                 }
                 break;
         }
@@ -411,6 +509,10 @@ public class PacketManager {
 
     public void setPmt(Pmt mPmt) {
         this.mPmt = mPmt;
+    }
+
+    public List<Pmt> getPmtList() {
+        return mPmtList;
     }
 
     public List<Program> getProgramList() {

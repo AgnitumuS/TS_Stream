@@ -1,5 +1,7 @@
 package com.excellence.iptv.bean.tables;
 
+import java.io.Serializable;
+
 /**
  * PmtStream
  *
@@ -7,7 +9,7 @@ package com.excellence.iptv.bean.tables;
  * @date 2018/3/29
  */
 
-public class PmtStream {
+public class PmtStream implements Serializable {
 
     /**
      * stream_type : 8 bit

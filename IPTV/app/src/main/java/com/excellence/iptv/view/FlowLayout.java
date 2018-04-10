@@ -204,8 +204,8 @@ public class FlowLayout extends ViewGroup {
                 int rc = lc + childWidth;
                 int bc = tc + childHeight;
 
-                Log.e(TAG, child + " , l = " + lc + " , t = " + t + " , r ="
-                        + rc + " , b = " + bc);
+//                Log.e(TAG, child + " , l = " + lc + " , t = " + t + " , r ="
+//                        + rc + " , b = " + bc);
 
                 // 子 view 布局
                 child.layout(lc, tc, rc, bc);
