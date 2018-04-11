@@ -2,7 +2,6 @@ package com.excellence.iptv;
 
 import android.Manifest;
 import android.content.Intent;
-import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Environment;
@@ -30,14 +29,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.excellence.iptv.adapter.FileListAdapter;
-import com.excellence.iptv.bean.Program;
 import com.excellence.iptv.bean.Ts;
-import com.excellence.iptv.bean.tables.PatProgram;
-import com.excellence.iptv.bean.tables.Pmt;
 import com.excellence.iptv.thread.TsThread;
-import com.excellence.iptv.util.PacketManager;
-import com.excellence.iptv.view.RobotoMediumTextView;
-import com.google.gson.Gson;
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
@@ -61,11 +54,7 @@ public class SelectFileActivity extends AppCompatActivity {
     private static final int WRITE_EXTERNAL_PERMISSION = 1;
     private static final String TS_FOLDER_PATH =
             Environment.getExternalStorageDirectory().getPath() + "/ts/";
-    private static final int PAT_PID = 0x0000;
-    private static final int PAT_TABLE_ID = 0x00;
-    private static final int SDT_PID = 0x0011;
-    private static final int SDT_TABLE_ID = 0x42;
-    private static final int PMT_TABLE_ID = 0x02;
+
     public static final int GET_PAT = 0;
     public static final int GET_SDT = 1;
     public static final int GET_PROGRAM_LIST = 2;
@@ -78,13 +67,11 @@ public class SelectFileActivity extends AppCompatActivity {
 
     private List<String> mFileNameList = new ArrayList<>();
     private List<String> mFilePathList = new ArrayList<>();
+
     private String mInputFilePath;
-
-    private PacketManager mPacketManager;
-
     private MyHandler mHandler = new MyHandler(this);
-
-    private List<TsThread> mTsThreadList = new ArrayList<>();
+    private Ts mTs = new Ts();
+    private TsThread mTsThread;
 
     private long mExitTime;
 
@@ -151,28 +138,23 @@ public class SelectFileActivity extends AppCompatActivity {
         mFileListAdapter.setOnItemClickListener(new FileListAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                mInputFilePath = mFilePathList.get(position);
-
                 // 显示 loading 提示框
                 showPopupWindow();
 
-                mPacketManager = new PacketManager(mHandler);
-                // 开启线程，扫描一次文件，获取 PAT SDT
-                int[][] searchArray = new int[2][2];
-                searchArray[0][0] = PAT_PID;
-                searchArray[0][1] = PAT_TABLE_ID;
-                searchArray[1][0] = SDT_PID;
-                searchArray[1][1] = SDT_TABLE_ID;
-                afxBeginThreadGetData(searchArray);
+                // 判断文件路径是否为同一个
+                mInputFilePath = mFilePathList.get(position);
+                if (!mTs.getFilePath().equals(mInputFilePath)) {
+                    mTs = new Ts();
+                    mTs.setFilePath(mInputFilePath);
+                }
+
+                // 开启线程
+                mTsThread = new TsThread(mInputFilePath, mHandler, mTs);
+                mTsThread.start();
             }
         });
     }
 
-    private void afxBeginThreadGetData(int[][] searchArray) {
-        TsThread tsThread = new TsThread(mInputFilePath, searchArray, mPacketManager);
-        mTsThreadList.add(tsThread);
-        tsThread.start();
-    }
 
     /**
      * 下拉刷新文件列表控件
@@ -241,6 +223,7 @@ public class SelectFileActivity extends AppCompatActivity {
             @Override
             public void onDismiss() {
                 // 中断线程
+                mTsThread.setOver();
             }
         });
     }
@@ -253,6 +236,8 @@ public class SelectFileActivity extends AppCompatActivity {
         WeakReference<SelectFileActivity> mWeakReference;
         boolean isGetPAT = false;
         boolean isGetSDT = false;
+        boolean isGetProgramList = false;
+        boolean isGetPmtList = false;
 
         public MyHandler(SelectFileActivity activity) {
             super();
@@ -269,49 +254,24 @@ public class SelectFileActivity extends AppCompatActivity {
                 switch (msg.what) {
                     case GET_PAT:
                         isGetPAT = true;
-
-                        // 获取 PAT 后，根据得到的 programMapPid 解出对应 PMT
-                        List<PatProgram> patProgramList =
-                                selectFileActivity.mPacketManager.getPat().getPatProgramList();
-                        int[][] searchArray = new int[patProgramList.size()][2];
-                        for (int i = 0; i < patProgramList.size(); i++) {
-                            searchArray[i][0] = patProgramList.get(i).getProgramMapPid();
-                            searchArray[i][1] = PMT_TABLE_ID;
-                        }
-                        // 新建线程，并将其加入 List<Thread>
-                        selectFileActivity.afxBeginThreadGetData(searchArray);
                         break;
-
                     case GET_SDT:
                         isGetSDT = true;
                         break;
-
                     case GET_PROGRAM_LIST:
+                        isGetProgramList = true;
                         break;
-
                     case GET_ALL_PMT:
+                        // 关闭等待框
                         selectFileActivity.mPopupWindow.dismiss();
-
-                        Ts ts = new Ts();
-                        ts.setFilePath(selectFileActivity.mPacketManager.getInputFilePath());
-                        ts.setPat(selectFileActivity.mPacketManager.getPat());
-                        ts.setSdt(selectFileActivity.mPacketManager.getSdt());
-                        ts.setPmtList(selectFileActivity.mPacketManager.getPmtList());
-                        ts.setProgramList(selectFileActivity.mPacketManager.getProgramList());
-
+                        // 进入 MainActivity
                         Intent intent = new Intent(selectFileActivity, MainActivity.class);
-                        intent.putExtra(KEY_TS_DATA, ts);
+                        intent.putExtra(KEY_TS_DATA, selectFileActivity.mTs);
                         selectFileActivity.startActivity(intent);
                         break;
 
                     default:
                         break;
-                }
-
-                if (isGetPAT && isGetSDT) {
-                    selectFileActivity.mPacketManager.parseToProgramList();
-                    isGetPAT = false;
-                    isGetSDT = false;
                 }
             }
         }

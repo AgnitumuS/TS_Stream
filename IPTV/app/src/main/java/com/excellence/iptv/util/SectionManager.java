@@ -249,7 +249,7 @@ public class SectionManager {
 
     public List<Section> getSectionList() {
         if (mSectionList.size() == 0) {
-            Log.e(TAG, "no matchArray section ");
+            Log.e(TAG, "no matchData section ");
             return null;
         }
         return mSectionList;
@@ -257,7 +257,7 @@ public class SectionManager {
 
     public void print() {
         if (mList == null) {
-            Log.e(TAG, "no matchArray section ");
+            Log.e(TAG, "no matchData section ");
             return;
         }
         Log.d(TAG, " --------------------------------------------------------------------------- ");

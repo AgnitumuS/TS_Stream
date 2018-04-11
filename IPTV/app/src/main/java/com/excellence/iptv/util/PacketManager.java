@@ -41,11 +41,10 @@ public class PacketManager {
             Environment.getExternalStorageDirectory().getPath() + "/ts_history/resultFile";
 
 
-    private boolean isOver = false;
+    private boolean mInterrupt = false;
 
     private String mInputFilePath = null;
     private String mOutputFilePath = OUTPUT_FILE_PATH;
-    private Handler mHandler;
 
     private int mPacketLength = -1;
     private int mPacketStartPosition = -1;
@@ -68,9 +67,8 @@ public class PacketManager {
     /**
      * 构造函数
      */
-    public PacketManager(Handler handler) {
+    public PacketManager() {
         super();
-        this.mHandler = handler;
     }
 
     public PacketManager(String inputFilePath) {
@@ -78,12 +76,12 @@ public class PacketManager {
         this.mInputFilePath = inputFilePath;
     }
 
-    public PacketManager(String inputFilePath, int inputPID, int inputTableId, Handler handler) {
+    public PacketManager(String inputFilePath, int inputPID, int inputTableId) {
         super();
         this.mInputFilePath = inputFilePath;
         this.mInputPID = inputPID;
         this.mInputTableID = inputTableId;
-        this.mHandler = handler;
+
     }
 
 
@@ -92,12 +90,12 @@ public class PacketManager {
      */
     public int matchPacketLength(String inputFilePath) {
         Log.d(TAG, " -- matchPacketLength()");
-        long startTime = System.currentTimeMillis();
 
         mInputFilePath = inputFilePath;
 
         mPacketLength = -1;
         mPacketStartPosition = -1;
+
         try {
             File file = new File(mInputFilePath);
             FileInputStream fis = new FileInputStream(file);
@@ -109,9 +107,9 @@ public class PacketManager {
                 Log.d(TAG, "current position : " + mPacketStartPosition +
                         "   0x" + toHexString(tmp));
 
-                // matchArray to 0x47
+                // matchData to 0x47
                 if (tmp == PACKET_HEADER_SYNC_BYTE) {
-                    Log.d(TAG, "matchArray to 0x" + toHexString(PACKET_HEADER_SYNC_BYTE));
+                    Log.d(TAG, "matchData to 0x" + toHexString(PACKET_HEADER_SYNC_BYTE));
 
                     /*
                     循环 10 次跳 188
@@ -214,8 +212,6 @@ public class PacketManager {
             e.printStackTrace();
         }
 
-        long endTime = System.currentTimeMillis();
-        Log.d(TAG, "当前方法耗时： " + (endTime - startTime) + " ms");
         return mPacketLength;
     }
 
@@ -253,10 +249,10 @@ public class PacketManager {
             mPacketNum = 0;
             int err;
             do {
-                // 结束查找
-                if (isOver) {
-                    isOver = false;
-                    Log.e(TAG, "isOver !!!");
+                // 中断查找
+                if (mInterrupt) {
+                    mInterrupt = false;
+                    Log.e(TAG, "matchPidTableId() Interrupt !!!");
                     break;
                 }
 
@@ -303,20 +299,22 @@ public class PacketManager {
     }
 
 
-    public int matchArray(String inputFilePath, int[][] searchArray) {
-        Log.d(TAG, " -- matchArray()");
-        mInputFilePath = inputFilePath;
-        Log.d(TAG, "inputFilePath : " + mInputFilePath);
+    public int matchData(String inputFilePath, int[][] searchArray) {
+        Log.d(TAG, " -- matchData()");
 
-        // 根据数组大小来 new SectionManager
+        mInputFilePath = inputFilePath;
+
+        // 准备 SectionManager
         mSectionManagerList.clear();
         for (int i = 0; i < searchArray.length; i++) {
             SectionManager sectionManager = new SectionManager();
             mSectionManagerList.add(sectionManager);
         }
 
-        // 获取 PacketLength 和 PacketStartPosition
-        matchPacketLength(mInputFilePath);
+        // 如果 PacketLength PacketStartPosition 的值为异常，重新 matchPacketLength()
+        if (mPacketLength == -1 || mPacketStartPosition == -1) {
+            matchPacketLength(mInputFilePath);
+        }
 
         try {
             FileInputStream fis = new FileInputStream(mInputFilePath);
@@ -330,11 +328,11 @@ public class PacketManager {
 
             int err;
             do {
-                // 结束查找
-                if (isOver) {
-                    isOver = false;
-                    Log.e(TAG, "isOver !!!");
-                    return -2;
+                // 中断查找
+                if (mInterrupt) {
+                    mInterrupt = false;
+                    Log.e(TAG, "matchData() mInterrupt !!!");
+                    return -1;
                 }
 
                 byte[] buff = new byte[mPacketLength];
@@ -349,27 +347,27 @@ public class PacketManager {
                             if (packet.getPid() == searchArray[i][0]) {
                                 // 匹配 section
                                 SectionManager sectionManager = mSectionManagerList.get(i);
-                                // 找第一版
-                                if (!sectionManager.getIsFinishOne()) {
-                                    sectionManager.matchSection(packet, searchArray[i][1]);
-                                }
                                 sectionManager.matchSection(packet, searchArray[i][1]);
+//                                // 第一版
+//                                if (!sectionManager.getIsFinishOne()) {
+//                                    sectionManager.matchSection(packet, searchArray[i][1]);
+//                                }
                                 break;
                             }
                         }
                     }
                 }
 
-                // 全找第一版
-                boolean isFinish = true;
-                for (SectionManager sectionManager : mSectionManagerList) {
-                    if (!sectionManager.getIsFinishOne()) {
-                        isFinish = false;
-                    }
-                }
-                if (isFinish) {
-                    break;
-                }
+//                // 第一版
+//                boolean isFinish = true;
+//                for (SectionManager sectionManager : mSectionManagerList) {
+//                    if (!sectionManager.getIsFinishOne()) {
+//                        isFinish = false;
+//                    }
+//                }
+//                if (isFinish) {
+//                    break;
+//                }
 
             } while (err != -1);
 
@@ -405,13 +403,11 @@ public class PacketManager {
             case PAT_PID:
                 PatManager patManager = new PatManager();
                 mPat = patManager.makePAT(list);
-                mHandler.sendEmptyMessage(SelectFileActivity.GET_PAT);
                 break;
 
             case SDT_PID:
                 SdtManager sdtManager = new SdtManager();
                 mSdt = sdtManager.makeSDT(list);
-                mHandler.sendEmptyMessage(SelectFileActivity.GET_SDT);
                 break;
 
             default:
@@ -419,28 +415,26 @@ public class PacketManager {
                     PmtManager pmtManager = new PmtManager();
                     mPmt = pmtManager.makePMT(list);
                     mPmtList.add(mPmt);
-                    if (mPmtList.size() == mPat.getPatProgramList().size()) {
-                        mHandler.sendEmptyMessage(SelectFileActivity.GET_ALL_PMT);
-                    }
                 }
                 break;
         }
     }
 
     /**
-     * 合成节目列表
+     * 合成节目列表：ProgramList
      */
-    public void parseToProgramList() {
-        if (mPat != null && mSdt != null) {
-            ProgramManager programManager = new ProgramManager();
-            mProgramList = programManager.makeProgramList(mPat, mSdt);
-            mHandler.sendEmptyMessage(SelectFileActivity.GET_PROGRAM_LIST);
+    public int parseToProgramList() {
+        if (mPat == null && mSdt == null) {
+            return -1;
         }
+        ProgramManager programManager = new ProgramManager();
+        mProgramList = programManager.makeProgramList(mPat, mSdt);
+        return 0;
     }
 
 
-    public void setOver(boolean over) {
-        isOver = over;
+    public void setInterrupt(boolean mInterrupt) {
+        this.mInterrupt = mInterrupt;
     }
 
     public String getInputFilePath() {
@@ -455,8 +449,16 @@ public class PacketManager {
         return mPacketLength;
     }
 
+    public void setPacketLength(int mPacketLength) {
+        this.mPacketLength = mPacketLength;
+    }
+
     public int getPacketStartPosition() {
         return mPacketStartPosition;
+    }
+
+    public void setPacketStartPosition(int mPacketStartPosition) {
+        this.mPacketStartPosition = mPacketStartPosition;
     }
 
     public int getInputPID() {
@@ -477,14 +479,6 @@ public class PacketManager {
 
     public void setOutputFilePath(String mOutputFilePath) {
         this.mOutputFilePath = mOutputFilePath;
-    }
-
-    public void setHandler(Handler mHandler) {
-        this.mHandler = mHandler;
-    }
-
-    public Handler getHandler() {
-        return mHandler;
     }
 
     public Pat getPat() {

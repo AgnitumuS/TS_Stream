@@ -17,7 +17,9 @@ import java.util.List;
 
 public class Ts implements Serializable {
 
-    private String filePath = null;
+    private String filePath = "";
+    private int packetLength = -1;
+    private int packetStartPosition = -1;
     private Pat pat = null;
     private Sdt sdt = null;
     private List<Pmt> pmtList = new ArrayList<>();
@@ -33,6 +35,22 @@ public class Ts implements Serializable {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public int getPacketLength() {
+        return packetLength;
+    }
+
+    public void setPacketLength(int packetLength) {
+        this.packetLength = packetLength;
+    }
+
+    public int getPacketStartPosition() {
+        return packetStartPosition;
+    }
+
+    public void setPacketStartPosition(int packetStartPosition) {
+        this.packetStartPosition = packetStartPosition;
     }
 
     public Pat getPat() {
