@@ -25,6 +25,7 @@ import com.excellence.iptv.fragment.AboutFragment;
 import com.excellence.iptv.fragment.FavoriteFragment;
 import com.excellence.iptv.fragment.LiveFragment;
 import com.excellence.iptv.fragment.SearchFragment;
+import com.excellence.iptv.view.RobotoRegularTextView;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private LinearLayout mNavigationLl;
     private ImageView mNavLiveIv, mNavAboutIv;
-    private TextView mNavLiveTv, mNavAboutTv;
+    private RobotoRegularTextView mNavLiveTv, mNavAboutTv;
 
     int mFragmentPos;
     private FragmentManager mFragmentManager;

@@ -129,4 +129,14 @@
     <dimen name="favorite_item_delete_iv_height">15dp</dimen>
     <dimen name="favorite_item_text_size">14sp</dimen>
 
+    <!-- player activity -->
+    <dimen name="player_title_bar_ll_height">36dp</dimen>
+    <dimen name="player_info_bar_ll_height">36dp</dimen>
+    <dimen name="player_back_iv_width">12dp</dimen>
+    <dimen name="player_back_iv_height">21dp</dimen>
+    <dimen name="player_title_text_size">18sp</dimen>
+    <dimen name="player_status_iv_width">12dp</dimen>
+    <dimen name="player_status_iv_height">16dp</dimen>
+    <dimen name="player_info_text_size">14sp</dimen>
+
 </resources>

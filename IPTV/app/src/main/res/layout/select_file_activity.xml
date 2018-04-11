@@ -11,7 +11,7 @@
         android:layout_height="@dimen/select_file_actionbar_rl_height"
         android:background="@color/colorRed">
 
-        <TextView
+        <com.excellence.iptv.view.RobotoMediumTextView
             android:id="@+id/tv_actionbar_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

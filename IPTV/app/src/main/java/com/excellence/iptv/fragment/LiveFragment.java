@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.excellence.iptv.MainActivity;
+import com.excellence.iptv.PlayerActivity;
 import com.excellence.iptv.R;
 import com.excellence.iptv.adapter.ProgramListAdapter;
 import com.excellence.iptv.bean.Program;
@@ -29,7 +30,8 @@ import java.util.List;
 
 public class LiveFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "LiveFragment";
-    public static final String KEY_SEARCH_LIST = "searchList";
+    public static final String KEY_PROGRAM_NUM = "programNum";
+    public static final String KEY_PROGRAM_NAME = "programName";
 
     private View mView;
     private MainActivity mMainActivity;
@@ -67,6 +69,16 @@ public class LiveFragment extends Fragment implements View.OnClickListener {
         recyclerView.setLayoutManager(layoutManager);
         mProgramListAdapter = new ProgramListAdapter(mMainActivity, mProgramList);
         recyclerView.setAdapter(mProgramListAdapter);
+
+        mProgramListAdapter.setOnItemClickListener(new ProgramListAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                Intent intent = new Intent(mMainActivity, PlayerActivity.class);
+                intent.putExtra(KEY_PROGRAM_NUM, mProgramList.get(position).getProgramNumber());
+                intent.putExtra(KEY_PROGRAM_NAME, mProgramList.get(position).getProgramName());
+                mMainActivity.startActivity(intent);
+            }
+        });
     }
 
     @Override

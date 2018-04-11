@@ -13,7 +13,7 @@
         android:background="@drawable/search_item_bg"
         android:gravity="center">
 
-        <TextView
+        <com.excellence.iptv.view.RobotoMediumTextView
             android:id="@+id/tv_search_item_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

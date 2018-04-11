@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 import com.excellence.iptv.R;
 import com.excellence.iptv.bean.Program;
+import com.excellence.iptv.view.RobotoMediumTextView;
+import com.excellence.iptv.view.RobotoRegularTextView;
 
 import java.util.List;
 
@@ -30,10 +32,10 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     private class MyViewHolder extends RecyclerView.ViewHolder {
         View itemView;
-        TextView programNumTv;
-        TextView programNameTv;
-        TextView programEitTimeTv;
-        TextView programEitNameTv;
+        RobotoMediumTextView programNumTv;
+        RobotoMediumTextView programNameTv;
+        RobotoRegularTextView programEitTimeTv;
+        RobotoRegularTextView programEitNameTv;
         ImageView addFavIv;
 
         public MyViewHolder(View v) {
@@ -103,7 +105,6 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 public void onClick(View v) {
                     int pos = myViewHolder.getLayoutPosition();
                     mOnItemClickListener.onItemClick(myViewHolder.itemView, pos);
-
                 }
             });
         }

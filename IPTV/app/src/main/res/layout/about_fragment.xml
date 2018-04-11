@@ -18,7 +18,7 @@
             android:layout_marginLeft="@dimen/margin_micro_little"
             android:src="@drawable/ic_back" />
 
-        <TextView
+        <com.excellence.iptv.view.RobotoMediumTextView
             android:id="@+id/tv_about_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -47,7 +47,7 @@
                 android:layout_height="@dimen/about_logo_iv_height"
                 android:src="@drawable/ic_logo" />
 
-            <TextView
+            <com.excellence.iptv.view.RobotoMediumTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/margin_micro_little"
@@ -67,7 +67,7 @@
                     android:layout_height="@dimen/about_info_rl_height"
                     android:gravity="center_vertical">
 
-                    <TextView
+                    <com.excellence.iptv.view.RobotoMediumTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentLeft="true"
@@ -76,7 +76,7 @@
                         android:textColor="@color/about_text_color"
                         android:textSize="@dimen/text_size_micro_micro" />
 
-                    <TextView
+                    <com.excellence.iptv.view.RobotoRegularTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentRight="true"
@@ -98,7 +98,7 @@
                     android:layout_height="@dimen/about_info_rl_height"
                     android:gravity="center_vertical">
 
-                    <TextView
+                    <com.excellence.iptv.view.RobotoMediumTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentLeft="true"

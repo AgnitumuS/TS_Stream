@@ -28,7 +28,6 @@
                 android:layout_marginLeft="@dimen/margin_micro"
                 android:layout_weight="1"
                 android:hint="@string/live_search_et_hint"
-                android:selectAllOnFocus="true"
                 android:singleLine="true"
                 android:textColor="@color/live_search_edit_text_color"
                 android:textSize="@dimen/live_search_text_size"
@@ -68,7 +67,7 @@
         android:layout_height="@dimen/search_history_rl_height"
         android:gravity="center_vertical">
 
-        <TextView
+        <com.excellence.iptv.view.RobotoMediumTextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/margin_micro_little_plus"

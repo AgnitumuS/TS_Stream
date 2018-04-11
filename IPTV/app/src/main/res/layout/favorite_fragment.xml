@@ -18,7 +18,7 @@
             android:layout_marginLeft="@dimen/margin_micro_little"
             android:src="@drawable/ic_back" />
 
-        <TextView
+        <com.excellence.iptv.view.RobotoMediumTextView
             android:id="@+id/tv_favorite_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

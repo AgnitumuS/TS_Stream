@@ -17,7 +17,7 @@
     <string name="live_item_tv_eit_name">No EPG</string>
 
     <string name="about_tv_title">About</string>
-    <string name="about_tv_logo">F·TV</string>
+    <string name="about_tv_logo">IPTV</string>
     <string name="about_tv_about_app">About APP</string>
     <string name="about_tv_about_version">V1.3.0</string>
     <string name="about_tv_update">Check Update</string>
@@ -28,5 +28,9 @@
 
     <string name="favorite_tv_title">Favorite</string>
     <string name="favorite_item_tv_program_info_result">%1$d %2$s</string>
+
+    <string name="player_tv_title_bar_result">%1$d  %2$s</string>
+    <string name="player_tv_eit_time">00:00\-00:00</string>
+    <string name="player_tv_eit_name">No EPG</string>
 
 </resources>

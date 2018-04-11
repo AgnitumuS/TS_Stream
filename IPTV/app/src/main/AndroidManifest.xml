@@ -26,6 +26,11 @@
             android:name=".MainActivity"
             android:launchMode="singleTask" />
 
+        <activity
+            android:name=".PlayerActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="sensorLandscape" />
+
     </application>
 
 </manifest>

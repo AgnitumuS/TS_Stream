@@ -17,7 +17,7 @@
             android:layout_height="@dimen/select_file_popup_window_iv_height"
             android:src="@drawable/pic_loading" />
 
-        <TextView
+        <com.excellence.iptv.view.RobotoMediumTextView
             android:id="@+id/tv_loading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

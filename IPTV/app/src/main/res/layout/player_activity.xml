@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorBlack">
+
+        <ImageView
+            android:id="@+id/iv_player"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/player_bg" />
+
+        <LinearLayout
+            android:id="@+id/ll_title_bar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/player_title_bar_ll_height"
+            android:background="@drawable/title_bar_bg"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/iv_player_back"
+                android:layout_width="@dimen/player_back_iv_width"
+                android:layout_height="@dimen/player_back_iv_height"
+                android:layout_marginLeft="@dimen/margin_little_little"
+                android:src="@drawable/ic_back" />
+
+            <com.excellence.iptv.view.RobotoRegularTextView
+                android:id="@+id/tv_player_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/margin_micro_little"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/player_title_text_size" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_info_bar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/player_info_bar_ll_height"
+            android:layout_gravity="bottom"
+            android:background="@drawable/info_bar_bg"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/iv_player_status"
+                android:layout_width="@dimen/player_status_iv_width"
+                android:layout_height="@dimen/player_status_iv_height"
+                android:layout_marginLeft="@dimen/margin_little_little"
+                android:src="@drawable/player_iv_status" />
+
+            <com.excellence.iptv.view.RobotoRegularTextView
+                android:id="@+id/tv_player_eit_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/margin_micro_little"
+                android:text="@string/player_tv_eit_time"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/player_info_text_size" />
+
+            <com.excellence.iptv.view.RobotoRegularTextView
+                android:id="@+id/tv_player_eit_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/margin_micro_little"
+                android:text="@string/player_tv_eit_name"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/player_info_text_size" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+
+</RelativeLayout>

@@ -313,6 +313,9 @@ public class FlowLayout extends ViewGroup {
     public void deleteTag(int position) {
         mHistoryTagList.remove(position);
         this.removeView(getChildAt(position));
+        if (mHistoryTagList.size() == 0) {
+            editMode(false);
+        }
     }
 
     public void editMode(boolean isRight) {

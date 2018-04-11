@@ -22,6 +22,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 
 import com.excellence.iptv.MainActivity;
+import com.excellence.iptv.PlayerActivity;
 import com.excellence.iptv.R;
 import com.excellence.iptv.adapter.ProgramListAdapter;
 import com.excellence.iptv.bean.Program;
@@ -35,6 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.content.Context.INPUT_METHOD_SERVICE;
+import static com.excellence.iptv.fragment.LiveFragment.KEY_PROGRAM_NAME;
+import static com.excellence.iptv.fragment.LiveFragment.KEY_PROGRAM_NUM;
 
 /**
  * SearchFragment
@@ -122,8 +125,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         SharedPreferences sp = mMainActivity.getPreferences(Context.MODE_PRIVATE);
         String json = sp.getString(KEY_SP_HISTORY_TAG, null);
         if (json != null) {
-            List<String> list = new ArrayList<>();
-            list = new Gson().fromJson(json, new TypeToken<List<String>>() {
+            List<String> list = new Gson().fromJson(json, new TypeToken<List<String>>() {
             }.getType());
             mFlowLayout.setListData(list);
         }
@@ -131,6 +133,9 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
 
     private void initMaterialEditText(View v) {
         mEditText = v.findViewById(R.id.et_search);
+        mEditText.requestFocus();
+        showKeyboard(mEditText);
+
         mEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -152,8 +157,6 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                 } else {
                     // 隐藏搜索结果列表
                     mRecyclerView.setVisibility(View.GONE);
-                    // 隐藏键盘
-                    hideKeyboard(mEditText);
                 }
 
             }
@@ -183,12 +186,15 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
             public void onItemClick(View view, int position) {
                 String programName = mSearchResultList.get(position).getProgramName();
 
+                Intent intent = new Intent(mMainActivity, PlayerActivity.class);
+                intent.putExtra(KEY_PROGRAM_NUM, mSearchResultList.get(position).getProgramNumber());
+                intent.putExtra(KEY_PROGRAM_NAME, mSearchResultList.get(position).getProgramName());
+                mMainActivity.startActivity(intent);
+
                 // 添加历史标签
                 mFlowLayout.addTag(programName);
                 // 清空搜索框
                 mEditText.setText("");
-                // 隐藏搜索结果列表
-                mRecyclerView.setVisibility(View.GONE);
                 // 隐藏键盘
                 hideKeyboard(view);
             }
@@ -201,12 +207,6 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
             case R.id.iv_search:
                 // 添加历史标签
                 mFlowLayout.addTag(mEditText.getText().toString());
-                // 清空搜索框
-                mEditText.setText("");
-                // 隐藏搜索结果列表
-                mRecyclerView.setVisibility(View.GONE);
-                // 隐藏键盘
-                hideKeyboard(v);
                 break;
 
             case R.id.btn_cancel:
@@ -225,8 +225,13 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    private void showKeyboard(View v) {
+        InputMethodManager imm = (InputMethodManager)
+                mMainActivity.getSystemService(INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS);
+    }
+
     private void hideKeyboard(View v) {
-        // 隐藏键盘
         InputMethodManager imm = (InputMethodManager)
                 mMainActivity.getSystemService(INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(v.getWindowToken(), 0);

@@ -36,6 +36,7 @@ import com.excellence.iptv.bean.tables.PatProgram;
 import com.excellence.iptv.bean.tables.Pmt;
 import com.excellence.iptv.thread.TsThread;
 import com.excellence.iptv.util.PacketManager;
+import com.excellence.iptv.view.RobotoMediumTextView;
 import com.google.gson.Gson;
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
@@ -71,7 +72,6 @@ public class SelectFileActivity extends AppCompatActivity {
     public static final int GET_ALL_PMT = 3;
     public static final String KEY_TS_DATA = "TsData";
 
-    private Typeface mTypeface;
     private SmartRefreshLayout mRefreshLayout;
     private FileListAdapter mFileListAdapter;
     private PopupWindow mPopupWindow;
@@ -93,9 +93,6 @@ public class SelectFileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.select_file_activity);
 
-        // 初始化简单布局
-        initView();
-
         // 判断 Android 版本是否大于 23 （Android 6.0）
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Request Read And Write Permission
@@ -110,17 +107,6 @@ public class SelectFileActivity extends AppCompatActivity {
         // 显示文件列表
         initRecyclerView();
         initSmartRefreshLayout();
-    }
-
-    /**
-     * 初始化简单布局
-     */
-    private void initView() {
-        // 设置字体
-        mTypeface = Typeface.createFromAsset(
-                getAssets(), "Roboto-Medium.ttf");
-        TextView actionBarTv = findViewById(R.id.tv_actionbar_title);
-        actionBarTv.setTypeface(mTypeface);
     }
 
     /**
@@ -158,7 +144,7 @@ public class SelectFileActivity extends AppCompatActivity {
         RecyclerView fileListRv = findViewById(R.id.recycler_view_file_list);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         fileListRv.setLayoutManager(layoutManager);
-        mFileListAdapter = new FileListAdapter(this, mFileNameList, mTypeface);
+        mFileListAdapter = new FileListAdapter(this, mFileNameList);
         fileListRv.setAdapter(mFileListAdapter);
 
         // OnItemClick
@@ -242,7 +228,6 @@ public class SelectFileActivity extends AppCompatActivity {
         loadingAnimIv.startAnimation(rotate);
 
         TextView loadingTv = view.findViewById(R.id.tv_loading);
-        loadingTv.setTypeface(mTypeface);
 
         // 外部可点击，即点击 PopupWindow 以外的区域，PopupWindow 消失
         mPopupWindow.setBackgroundDrawable(new BitmapDrawable());

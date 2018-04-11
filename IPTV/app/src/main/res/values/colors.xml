@@ -35,4 +35,7 @@
     <!-- search item -->
     <color name="search_item_text_color">#403d3d</color>
     <color name="search_item_bg_color">#e6e6e6</color>
+
+    <!-- favorite item -->
+    <color name="favorite_item_edit_mode_iv_color">#40000000</color>
 </resources>

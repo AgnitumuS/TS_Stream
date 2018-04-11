@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.excellence.iptv.R;
+import com.excellence.iptv.view.RobotoMediumTextView;
 
 import java.util.List;
 
@@ -24,27 +25,24 @@ public class FileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     private Context mContext;
     private List<String> mList;
-    private Typeface mTypeface;
 
     private OnItemClickListener mOnItemClickListener;
 
     class MyViewHolder extends RecyclerView.ViewHolder {
         View itemView;
-        TextView fileNameTv;
+        RobotoMediumTextView fileNameTv;
 
         public MyViewHolder(View v) {
             super(v);
             itemView = v;
             fileNameTv = v.findViewById(R.id.tv_file_name);
-            fileNameTv.setTypeface(mTypeface);
         }
     }
 
-    public FileListAdapter(Context context, List<String> list, Typeface typeface) {
+    public FileListAdapter(Context context, List<String> list) {
         super();
         this.mContext = context;
         this.mList = list;
-        this.mTypeface = typeface;
     }
 
     @Override
