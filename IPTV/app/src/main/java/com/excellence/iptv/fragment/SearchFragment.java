@@ -36,8 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.content.Context.INPUT_METHOD_SERVICE;
-import static com.excellence.iptv.fragment.LiveFragment.KEY_PROGRAM_NAME;
 import static com.excellence.iptv.fragment.LiveFragment.KEY_PROGRAM_NUM;
+import static com.excellence.iptv.fragment.LiveFragment.KEY_TS;
 
 /**
  * SearchFragment
@@ -185,10 +185,11 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onItemClick(View view, int position) {
                 String programName = mSearchResultList.get(position).getProgramName();
+                int programNum = mProgramList.get(position).getProgramNumber();
 
                 Intent intent = new Intent(mMainActivity, PlayerActivity.class);
-                intent.putExtra(KEY_PROGRAM_NUM, mSearchResultList.get(position).getProgramNumber());
-                intent.putExtra(KEY_PROGRAM_NAME, mSearchResultList.get(position).getProgramName());
+                intent.putExtra(KEY_TS, mMainActivity.getTs());
+                intent.putExtra(KEY_PROGRAM_NUM, programNum);
                 mMainActivity.startActivity(intent);
 
                 // 添加历史标签

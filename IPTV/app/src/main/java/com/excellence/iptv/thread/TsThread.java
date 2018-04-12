@@ -4,7 +4,9 @@ import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 
+import com.excellence.iptv.bean.Program;
 import com.excellence.iptv.bean.Ts;
+import com.excellence.iptv.bean.tables.Eit;
 import com.excellence.iptv.bean.tables.Pat;
 import com.excellence.iptv.bean.tables.PatProgram;
 import com.excellence.iptv.bean.tables.Pmt;
@@ -14,6 +16,9 @@ import com.excellence.iptv.util.PacketManager;
 import java.util.List;
 
 import static com.excellence.iptv.SelectFileActivity.GET_ALL_PMT;
+import static com.excellence.iptv.SelectFileActivity.GET_LENGTH_AND_START;
+import static com.excellence.iptv.SelectFileActivity.GET_PAT_AND_SDT;
+import static com.excellence.iptv.SelectFileActivity.GET_PROGRAM_LIST;
 
 /**
  * TsThread
@@ -30,6 +35,8 @@ public class TsThread extends Thread {
     private static final int PAT_TABLE_ID = 0x00;
     private static final int SDT_PID = 0x0011;
     private static final int SDT_TABLE_ID = 0x42;
+    private static final int EIT_PID = 0x0012;
+    private static final int EIT_TABLE_ID = 0x4e;
     private static final int PMT_TABLE_ID = 0x02;
 
     private String mInputFilePath;
@@ -43,6 +50,7 @@ public class TsThread extends Thread {
         this.mInputFilePath = inputFilePath;
         this.mHandler = handler;
         this.mTs = ts;
+        this.mTs.setFilePath(inputFilePath);
     }
 
     @Override
@@ -79,26 +87,32 @@ public class TsThread extends Thread {
             int err = mPacketManager.matchPacketLength(mInputFilePath);
             if (err == -1) {
                 Log.e(TAG, "Failed to get PacketLength and PacketStartPosition");
+                return;
             } else {
                 // 保存 PacketLength 、 PacketStartPosition
                 mTs.setPacketLength(mPacketManager.getPacketLength());
                 mTs.setPacketStartPosition(mPacketManager.getPacketStartPosition());
+                mHandler.sendEmptyMessage(GET_LENGTH_AND_START);
             }
         }
         // 解 PAT 、SDT
         if (mPacketManager.getPat() == null || mPacketManager.getSdt() == null) {
-            int[][] searchArray = new int[2][2];
+            int[][] searchArray = new int[3][2];
             searchArray[0][0] = PAT_PID;
             searchArray[0][1] = PAT_TABLE_ID;
             searchArray[1][0] = SDT_PID;
             searchArray[1][1] = SDT_TABLE_ID;
+            searchArray[2][0] = EIT_PID;
+            searchArray[2][1] = EIT_TABLE_ID;
             int err = mPacketManager.matchData(mInputFilePath, searchArray);
             if (err == -1) {
                 Log.e(TAG, "Failed to get PAT and SDT");
+                return;
             } else {
                 // 保存 PAT 、SDT
                 mTs.setPat(mPacketManager.getPat());
                 mTs.setSdt(mPacketManager.getSdt());
+                mHandler.sendEmptyMessage(GET_PAT_AND_SDT);
 
                 // 合成为节目列表 ProgramList
                 int error = mPacketManager.parseToProgramList();
@@ -107,6 +121,7 @@ public class TsThread extends Thread {
                 } else {
                     // 保存 ProgramList
                     mTs.setProgramList(mPacketManager.getProgramList());
+                    mHandler.sendEmptyMessage(GET_PROGRAM_LIST);
                 }
             }
         }

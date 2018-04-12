@@ -8,10 +8,12 @@ import com.excellence.iptv.SelectFileActivity;
 import com.excellence.iptv.bean.Packet;
 import com.excellence.iptv.bean.Program;
 import com.excellence.iptv.bean.Section;
+import com.excellence.iptv.bean.tables.Eit;
 import com.excellence.iptv.bean.tables.Pat;
 import com.excellence.iptv.bean.tables.Pmt;
 import com.excellence.iptv.bean.tables.Sdt;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -36,6 +38,7 @@ public class PacketManager {
     private static final int PACKET_LENGTH_204 = 204;
     private static final int PAT_PID = 0x0000;
     private static final int SDT_PID = 0x0011;
+    private static final int EIT_PID = 0x0012;
     private static final int PMT_TABLE_ID = 0x02;
     private static final String OUTPUT_FILE_PATH =
             Environment.getExternalStorageDirectory().getPath() + "/ts_history/resultFile";
@@ -57,6 +60,7 @@ public class PacketManager {
 
     private Pat mPat = null;
     private Sdt mSdt = null;
+    private Eit mEit = null;
     private Pmt mPmt = null;
 
     private List<Pmt> mPmtList = new ArrayList<>();
@@ -232,8 +236,10 @@ public class PacketManager {
         mSectionManagerList.add(sectionManager);
 
 
-        // 获取 PacketLength 和 PacketStartPosition
-        matchPacketLength(mInputFilePath);
+        // 如果 PacketLength PacketStartPosition 的值为异常，重新 matchPacketLength()
+        if (mPacketLength == -1 || mPacketStartPosition == -1) {
+            matchPacketLength(mInputFilePath);
+        }
 
         try {
             FileInputStream fis = new FileInputStream(mInputFilePath);
@@ -317,7 +323,8 @@ public class PacketManager {
         }
 
         try {
-            FileInputStream fis = new FileInputStream(mInputFilePath);
+            BufferedInputStream fis = new BufferedInputStream(new FileInputStream(mInputFilePath));
+//            FileInputStream fis = new FileInputStream(mInputFilePath);
 
             // 跳到包的开始位置
             long lg = fis.skip(mPacketStartPosition);
@@ -348,26 +355,13 @@ public class PacketManager {
                                 // 匹配 section
                                 SectionManager sectionManager = mSectionManagerList.get(i);
                                 sectionManager.matchSection(packet, searchArray[i][1]);
-//                                // 第一版
-//                                if (!sectionManager.getIsFinishOne()) {
-//                                    sectionManager.matchSection(packet, searchArray[i][1]);
-//                                }
+
                                 break;
                             }
                         }
                     }
                 }
 
-//                // 第一版
-//                boolean isFinish = true;
-//                for (SectionManager sectionManager : mSectionManagerList) {
-//                    if (!sectionManager.getIsFinishOne()) {
-//                        isFinish = false;
-//                    }
-//                }
-//                if (isFinish) {
-//                    break;
-//                }
 
             } while (err != -1);
 
@@ -408,6 +402,11 @@ public class PacketManager {
             case SDT_PID:
                 SdtManager sdtManager = new SdtManager();
                 mSdt = sdtManager.makeSDT(list);
+                break;
+
+            case EIT_PID:
+                EitManager eitManager = new EitManager();
+                mEit = eitManager.makeEit(list);
                 break;
 
             default:

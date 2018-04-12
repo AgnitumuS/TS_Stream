@@ -55,8 +55,8 @@ public class SelectFileActivity extends AppCompatActivity {
     private static final String TS_FOLDER_PATH =
             Environment.getExternalStorageDirectory().getPath() + "/ts/";
 
-    public static final int GET_PAT = 0;
-    public static final int GET_SDT = 1;
+    public static final int GET_LENGTH_AND_START = 0;
+    public static final int GET_PAT_AND_SDT = 1;
     public static final int GET_PROGRAM_LIST = 2;
     public static final int GET_ALL_PMT = 3;
     public static final String KEY_TS_DATA = "TsData";
@@ -64,13 +64,15 @@ public class SelectFileActivity extends AppCompatActivity {
     private SmartRefreshLayout mRefreshLayout;
     private FileListAdapter mFileListAdapter;
     private PopupWindow mPopupWindow;
+    private TextView mLoadingTv;
 
     private List<String> mFileNameList = new ArrayList<>();
     private List<String> mFilePathList = new ArrayList<>();
 
     private String mInputFilePath;
     private MyHandler mHandler = new MyHandler(this);
-    private Ts mTs = new Ts();
+    private Ts mTs;
+    private List<Ts> mTsList = new ArrayList<>();
     private TsThread mTsThread;
 
     private long mExitTime;
@@ -141,16 +143,27 @@ public class SelectFileActivity extends AppCompatActivity {
                 // 显示 loading 提示框
                 showPopupWindow();
 
-                // 判断文件路径是否为同一个
+                // 根据文件路径判断是否点击已经解过的文件
                 mInputFilePath = mFilePathList.get(position);
-                if (!mTs.getFilePath().equals(mInputFilePath)) {
+                boolean isNewTs = true;
+                if (mTsList.size() != 0) {
+                    for (Ts ts : mTsList) {
+                        if (ts.getFilePath().equals(mInputFilePath)) {
+                            mTs = ts;
+                            isNewTs = false;
+                            break;
+                        }
+                    }
+                }
+                if (isNewTs) {
                     mTs = new Ts();
-                    mTs.setFilePath(mInputFilePath);
+                    mTsList.add(mTs);
                 }
 
                 // 开启线程
                 mTsThread = new TsThread(mInputFilePath, mHandler, mTs);
                 mTsThread.start();
+
             }
         });
     }
@@ -209,7 +222,7 @@ public class SelectFileActivity extends AppCompatActivity {
         loadingAnimIv.setAnimation(rotate);
         loadingAnimIv.startAnimation(rotate);
 
-        TextView loadingTv = view.findViewById(R.id.tv_loading);
+        mLoadingTv = view.findViewById(R.id.tv_loading);
 
         // 外部可点击，即点击 PopupWindow 以外的区域，PopupWindow 消失
         mPopupWindow.setBackgroundDrawable(new BitmapDrawable());
@@ -234,10 +247,6 @@ public class SelectFileActivity extends AppCompatActivity {
      */
     private static class MyHandler extends Handler {
         WeakReference<SelectFileActivity> mWeakReference;
-        boolean isGetPAT = false;
-        boolean isGetSDT = false;
-        boolean isGetProgramList = false;
-        boolean isGetPmtList = false;
 
         public MyHandler(SelectFileActivity activity) {
             super();
@@ -252,14 +261,14 @@ public class SelectFileActivity extends AppCompatActivity {
 
             if (selectFileActivity != null) {
                 switch (msg.what) {
-                    case GET_PAT:
-                        isGetPAT = true;
+                    case GET_LENGTH_AND_START:
+                        selectFileActivity.mLoadingTv.setText("Get packetLen and startPosition");
                         break;
-                    case GET_SDT:
-                        isGetSDT = true;
+                    case GET_PAT_AND_SDT:
+                        selectFileActivity.mLoadingTv.setText("Get PAT and SDT");
                         break;
                     case GET_PROGRAM_LIST:
-                        isGetProgramList = true;
+                        selectFileActivity.mLoadingTv.setText("Get programList");
                         break;
                     case GET_ALL_PMT:
                         // 关闭等待框

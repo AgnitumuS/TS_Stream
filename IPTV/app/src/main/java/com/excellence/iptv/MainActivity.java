@@ -219,12 +219,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return fragment;
     }
 
-
-    public List<Program> getProgramList() {
-        return mProgramList;
-    }
-
-
     private class MyLocalReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -243,6 +237,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
     }
+
+    public Ts getTs() {
+        return mTs;
+    }
+
+    public List<Program> getProgramList() {
+        return mProgramList;
+    }
+
+
+
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -292,4 +297,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         editor.putString(key, json);
         editor.apply();
     }
+
 }

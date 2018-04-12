@@ -17,6 +17,7 @@ import com.excellence.iptv.PlayerActivity;
 import com.excellence.iptv.R;
 import com.excellence.iptv.adapter.ProgramListAdapter;
 import com.excellence.iptv.bean.Program;
+import com.excellence.iptv.bean.tables.Pmt;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +31,8 @@ import java.util.List;
 
 public class LiveFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "LiveFragment";
+    public static final String KEY_TS = "ts";
     public static final String KEY_PROGRAM_NUM = "programNum";
-    public static final String KEY_PROGRAM_NAME = "programName";
 
     private View mView;
     private MainActivity mMainActivity;
@@ -73,9 +74,11 @@ public class LiveFragment extends Fragment implements View.OnClickListener {
         mProgramListAdapter.setOnItemClickListener(new ProgramListAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
+                int programNum = mProgramList.get(position).getProgramNumber();
+
                 Intent intent = new Intent(mMainActivity, PlayerActivity.class);
-                intent.putExtra(KEY_PROGRAM_NUM, mProgramList.get(position).getProgramNumber());
-                intent.putExtra(KEY_PROGRAM_NAME, mProgramList.get(position).getProgramName());
+                intent.putExtra(KEY_TS, mMainActivity.getTs());
+                intent.putExtra(KEY_PROGRAM_NUM, programNum);
                 mMainActivity.startActivity(intent);
             }
         });

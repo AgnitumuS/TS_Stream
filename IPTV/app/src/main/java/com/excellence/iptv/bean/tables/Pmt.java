@@ -105,7 +105,7 @@ public class Pmt implements Serializable {
         stringBuilder.append("tableId : 0x" + toHexString(tableId) + "\n" +
                 "sectionSyntaxIndicator : 0x" + toHexString(sectionSyntaxIndicator) + "\n" +
                 "sectionLength : 0x" + toHexString(sectionLength) + "\n" +
-                "programNumber : 0x" + toHexString(programNumber) + "\n" +
+                "programNumber : " + programNumber + "\n" +
                 "versionNumber : 0x" + toHexString(versionNumber) + "\n" +
                 "currentNextIndicator : 0x" + toHexString(currentNextIndicator) + "\n" +
                 "sectionNumber : 0x" + toHexString(sectionNumber) + "\n" +

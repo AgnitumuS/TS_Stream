@@ -23,15 +23,10 @@ public class SectionManager {
     private static final int SKIP_ONE = 1;
     private static final int SECTION_BEGIN_POSITION_1 = 5;
     private static final int SECTION_BEGIN_POSITION_2 = 4;
-    private static final int PACKET_LENGTH_188 = 188;
     private static final int PACKET_LENGTH_204 = 204;
 
-    private int mVersionNumber = -1;
-    private byte[][] mList;
-    private int[] mCursor;
-    private int[] mNextContinuityCounter;
 
-
+    private Section mSection;
     private List<Section> mSectionList = new ArrayList<>();
 
     private boolean isFinishOne = false;
@@ -42,231 +37,192 @@ public class SectionManager {
     }
 
     public int matchSection(Packet packet, int inputTableId) {
+        Log.d(TAG, " --------------------------------------- ");
+        Log.d(TAG, " -- matchSection()");
 
         byte[] packetBuff = packet.getPacket();
         int packetLength = packetBuff.length;
 
-        int syncByte = packet.getSyncByte();
         int transportErrorIndicator = packet.getTransportErrorIndicator();
         int payloadUnitStartIndicator = packet.getPayloadUnitStartIndicator();
-        int pid = packet.getPid();
         int continuityCounter = packet.getContinuityCounter();
-        Log.d(TAG, " ---------------------------------------------- ");
-        Log.d(TAG, " -- matchSection()");
-        Log.d(TAG, "syncByte : 0x" + toHexString(syncByte));
-        Log.d(TAG, "transportErrorIndicator : 0x" + toHexString(transportErrorIndicator));
-        Log.d(TAG, "payloadUnitStartIndicator : 0x" + toHexString(payloadUnitStartIndicator));
-        Log.d(TAG, "pid : 0x" + toHexString(pid));
-        Log.d(TAG, "continuityCounter : 0x" + toHexString(continuityCounter));
 
         // 判断传输错误
         if (transportErrorIndicator == 0x1) {
-            Log.e(TAG, "transport_error_indicator : " + toHexString(transportErrorIndicator));
+            Log.e(TAG, "Error transport_error_indicator : " + toHexString(transportErrorIndicator));
             return -1;
         }
 
-
         // 判断 packet 的类型
         if (payloadUnitStartIndicator == 0x1) {
-
             // 解表头的数据
             int tableId = packetBuff[SECTION_BEGIN_POSITION_1] & 0xFF;
             int sectionLength = (((packetBuff[SECTION_BEGIN_POSITION_1 + 1] & 0xF) << 8) |
                     (packetBuff[SECTION_BEGIN_POSITION_1 + 2] & 0xFF)) & 0xFFF;
+            int transportStreamIdOrServiceId = (((packetBuff[SECTION_BEGIN_POSITION_1 + 3] & 0xFF) << 8) |
+                    (packetBuff[SECTION_BEGIN_POSITION_1 + 4] & 0xFF)) & 0xFFFF;
             int versionNumber = (packetBuff[SECTION_BEGIN_POSITION_1 + 5] >> 1) & 0x1F;
             int sectionNumber = packetBuff[SECTION_BEGIN_POSITION_1 + 6] & 0xFF;
             int lastSectionNumber = packetBuff[SECTION_BEGIN_POSITION_1 + 7] & 0xFF;
 
             // 判断 tableId
             if (tableId != inputTableId) {
-                Log.e(TAG, "tableId : 0x" + toHexString(tableId));
+                Log.e(TAG, "Error tableId : 0x" + toHexString(tableId));
                 return -1;
             }
-            Log.d(TAG, "  ");
-            Log.d(TAG, "tableId : 0x" + toHexString(tableId));
-            Log.d(TAG, "sectionLength : 0x" + toHexString(sectionLength) + "(" + sectionLength + ")");
-            Log.d(TAG, "versionNumber : 0x" + toHexString(versionNumber));
-            Log.d(TAG, "sectionNumber : 0x" + toHexString(sectionNumber));
-            Log.d(TAG, "lastSectionNumber : 0x" + toHexString(lastSectionNumber));
 
-            // tableId : 8
-            // section_syntax_indicator : 1
-            // zero : 1
-            // reserved_1 : 2
-            // sectionLength : 12
-            // -- total : 24 (3 byte)
-            int sectionSize = sectionLength + 3;
-            Log.d(TAG, "sectionSize : " + sectionSize);
 
-            // 判断 versionNumber
-            if (mVersionNumber == -1) {
-                Log.d(TAG, "  ");
-                Log.d(TAG, "new versionNumber : 0x" + toHexString(versionNumber));
-                // 初始化数据：mVersionNumber, mList, mCursor, mNextContinuityCounter
-                initData(versionNumber, lastSectionNumber);
+            // 构建 Section 对象
+            mSection = new Section(tableId, sectionLength, transportStreamIdOrServiceId,
+                    versionNumber, sectionNumber, lastSectionNumber);
 
-            } else {
-                // 版本更新
-                if (mVersionNumber != versionNumber) {
-                    Log.d(TAG, "  ");
-                    Log.d(TAG, "new versionNumber : 0x" + toHexString(versionNumber));
-                    initData(versionNumber, lastSectionNumber);
+            // 匹配 TransportStreamIdOrServiceId ，寻找同组的 section
+            if (mSectionList.size() != 0) {
+                List<Section> needToRefreshList = new ArrayList<>();
+                for (Section section : mSectionList) {
+                    // 同组 section
+                    if (section.getTransportStreamIdOrServiceId() == mSection.getTransportStreamIdOrServiceId()) {
+                        // 版本号不同
+                        if (section.getVersionNumber() != mSection.getVersionNumber()) {
+                            // 版本更新
+                            needToRefreshList.add(section);
+                        } else {
+                            // 版本号相同，判断 sectionNum 是否存在
+                            if (section.getSectionNumber() == mSection.getSectionNumber()){
+                                Log.e(TAG, "Error old sectionNumber : 0x" + toHexString(sectionNumber));
+                                return -1;
+                            }
+                        }
+                    }
                 }
+                mSectionList.removeAll(needToRefreshList);
             }
 
-            // 判断 sectionNumber 是否已经在 mList
-            // 未记录：新建
-            // 已记录：结束（忽略）
-            int num = mCursor[sectionNumber];
-            if (num == 0) {
-                Log.d(TAG, "  ");
-                Log.d(TAG, "new sectionNumber : 0x" + toHexString(sectionNumber));
-                mList[sectionNumber] = new byte[sectionSize];
+            // 取出待操作数据
+            int sectionSize = mSection.getSectionLength() + 3;
+            byte[] sectionData = mSection.getSectionData();
+            int sectionCursor = mSection.getSectionCursor();
+            int nextContinuityCounter = mSection.getNextContinuityCounter();
 
-                Log.d(TAG, "mList[" + sectionNumber + "].length : " + mList[sectionNumber].length);
-            } else {
-                Log.e(TAG, "old sectionNumber : 0x" + toHexString(sectionNumber));
-                return -1;
-            }
-
-            // 下面将进行记录当前 sectionNumber 操作
-
-            // 判断 sectionLength
+            // 判断当前包所含的 section 数据长度
             int theMaxEffectiveLength = packetLength - PACKET_HEADER_LENGTH - SKIP_ONE;
             if (packetLength == PACKET_LENGTH_204) {
-                theMaxEffectiveLength = packetLength - PACKET_HEADER_LENGTH - SKIP_ONE - 16;
+                theMaxEffectiveLength -= 16;
             }
+            // 判断 sectionLength
             if (sectionSize <= theMaxEffectiveLength) {
+                // 数据在单个包内
                 for (int i = 0; i < sectionSize; i++) {
-                    mList[sectionNumber][i] = packetBuff[SECTION_BEGIN_POSITION_1 + i];
-                    mCursor[sectionNumber]++;
+                    sectionData[i] = packetBuff[SECTION_BEGIN_POSITION_1 + i];
+                    sectionCursor++;
                 }
-                // -2 表示当前 sectionNumber 的数据已写完
-                mNextContinuityCounter[sectionNumber] = -2;
+                nextContinuityCounter = -1;
 
-                // 把所有完整的 section 都加进 mSectionList
-                Section section = new Section(mList[sectionNumber]);
-                mSectionList.add(section);
-                if (mSectionList.size() == section.getLastSectionNumber() + 1) {
-                    isFinishOne = true;
-                }
             } else {
                 // 挎包
                 for (int i = 0; i < theMaxEffectiveLength; i++) {
-                    mList[sectionNumber][i] = packetBuff[SECTION_BEGIN_POSITION_1 + i];
-                    mCursor[sectionNumber]++;
+                    sectionData[i] = packetBuff[SECTION_BEGIN_POSITION_1 + i];
+                    sectionCursor++;
                 }
-                // 记录下一个 packet 的 ContinuityCounter
-                if (continuityCounter == 15) {
-                    continuityCounter = -1;
+                // 记录 nextContinuityCounter
+                nextContinuityCounter = continuityCounter + 1;
+                if (nextContinuityCounter > 15) {
+                    nextContinuityCounter = 0;
                 }
-                mNextContinuityCounter[sectionNumber] = continuityCounter + 1;
             }
-            Log.d(TAG, "mCursor[" + sectionNumber + "] : " + mCursor[sectionNumber] + "(" + sectionSize + ")");
-            Log.d(TAG, "mNextContinuityCounter[" + sectionNumber + "] : " + toHexString(mNextContinuityCounter[sectionNumber]));
+            // 更新 mSection 值
+            mSection.setSectionCursor(sectionCursor);
+            mSection.setNextContinuityCounter(nextContinuityCounter);
+            mSection.setSectionData(sectionData);
+            mSectionList.add(mSection);
 
         } else {
 
-            if (mVersionNumber == -1) {
-                Log.e(TAG, "no versionNumber");
+            if (mSectionList.size() == 0) {
+                Log.e(TAG, "Error mSectionList.size() == 0 ");
                 return -1;
             }
 
-            // 寻找需要拼接的 sectionNumber
+            // 匹配需要拼接的 sectionNumber
             int unFinishSectionNumber = -1;
-            for (int i = 0; i < mNextContinuityCounter.length; i++) {
-                if (mNextContinuityCounter[i] == continuityCounter) {
-                    unFinishSectionNumber = i;
+            for (Section section : mSectionList) {
+                if (section.getNextContinuityCounter() == continuityCounter) {
+                    mSection = section;
+                    break;
                 }
             }
 
-            if (unFinishSectionNumber == -1) {
-                Log.e(TAG, "no unFinishSectionNumber");
+            if (mSection == null) {
+                Log.e(TAG, "Error no match unFinish Section");
                 return -1;
             }
 
-            int sectionSize = mList[unFinishSectionNumber].length;
+            int sectionSize = mSection.getSectionLength() + 3;
+            byte[] sectionData = mSection.getSectionData();
+            int sectionCursor = mSection.getSectionCursor();
+            int nextContinuityCounter = mSection.getNextContinuityCounter();
+
             int theMaxEffectiveLength = packetLength - PACKET_HEADER_LENGTH;
             if (packetLength == PACKET_LENGTH_204) {
-                theMaxEffectiveLength = packetLength - PACKET_HEADER_LENGTH - 16;
+                theMaxEffectiveLength -= 16;
             }
-            int surplusValue = sectionSize - mCursor[unFinishSectionNumber];
+            int surplusValue = sectionSize - sectionCursor;
             if (surplusValue <= theMaxEffectiveLength) {
+                // 数据在单个包内
                 for (int i = 0; i < surplusValue; i++) {
-                    int cursor = mCursor[unFinishSectionNumber];
-                    mList[unFinishSectionNumber][cursor] = packetBuff[SECTION_BEGIN_POSITION_2 + i];
-                    mCursor[unFinishSectionNumber]++;
+                    sectionData[sectionCursor] = packetBuff[SECTION_BEGIN_POSITION_2 + i];
+                    sectionCursor++;
                 }
-                mNextContinuityCounter[unFinishSectionNumber] = -2;
-
-                // 把所有完整的 section 都加进 mSectionList
-                Section section = new Section(mList[unFinishSectionNumber]);
-                mSectionList.add(section);
-                if (mSectionList.size() == section.getLastSectionNumber() + 1) {
-                    isFinishOne = true;
-                }
+                nextContinuityCounter = -1;
 
             } else {
+                // 挎包
                 for (int i = 0; i < theMaxEffectiveLength; i++) {
-                    int cursor = mCursor[unFinishSectionNumber];
-                    mList[unFinishSectionNumber][cursor] = packetBuff[SECTION_BEGIN_POSITION_2 + i];
-                    mCursor[unFinishSectionNumber]++;
+                    sectionData[sectionCursor] = packetBuff[SECTION_BEGIN_POSITION_2 + i];
+                    sectionCursor++;
                 }
-                // 记录下一个 packet 的 ContinuityCounter
-                if (continuityCounter == 15) {
-                    continuityCounter = -1;
+                // 记录 nextContinuityCounter
+                nextContinuityCounter = continuityCounter + 1;
+                if (nextContinuityCounter > 15) {
+                    nextContinuityCounter = 0;
                 }
-                mNextContinuityCounter[unFinishSectionNumber] = continuityCounter + 1;
             }
-            Log.d(TAG, "mCursor[" + unFinishSectionNumber + "] : " + mCursor[unFinishSectionNumber] + "(" + sectionSize + ")");
-            Log.d(TAG, "mNextContinuityCounter[" + unFinishSectionNumber + "] : " + toHexString(mNextContinuityCounter[unFinishSectionNumber]));
-        }
-
-        if (isFinishOne) {
-            return 1;
+            // 更新 mSection 值
+            mSection.setSectionCursor(sectionCursor);
+            mSection.setNextContinuityCounter(nextContinuityCounter);
+            mSection.setSectionData(sectionData);
         }
 
         return 0;
     }
 
-    /**
-     * 初始化解析 section 所需的参数
-     */
-    private void initData(int versionNumber, int lastSectionNumber) {
-        int size = lastSectionNumber + 1;
-
-        mVersionNumber = versionNumber;
-        mList = new byte[size][];
-        mCursor = new int[size];
-        mNextContinuityCounter = new int[size];
-        for (int i = 0; i < size; i++) {
-            mCursor[i] = 0;
-            mNextContinuityCounter[i] = -1;
-        }
-
-        mSectionList.clear();
-    }
 
     public List<Section> getSectionList() {
+        for (Section section : mSectionList) {
+            if (section.getSectionCursor() < section.getSectionLength() + 3) {
+                mSectionList.remove(section);
+            }
+        }
         if (mSectionList.size() == 0) {
-            Log.e(TAG, "no matchData section ");
+            Log.e(TAG, "Error mSectionList.size() == 0");
             return null;
         }
         return mSectionList;
     }
 
     public void print() {
-        if (mList == null) {
-            Log.e(TAG, "no matchData section ");
+        if (mSectionList.size() == 0) {
+            Log.e(TAG, "Error mSectionList.size() == 0");
             return;
         }
         Log.d(TAG, " --------------------------------------------------------------------------- ");
-        Log.d(TAG, " Section List : " + mList.length);
-        for (int i = 0; i < mList.length; i++) {
+        Log.d(TAG, " Section List : " + mSectionList.size());
+        for (int i = 0; i < mSectionList.size(); i++) {
+            mSection = mSectionList.get(i);
             Log.d(TAG, " --------------------------------------------------------------------------- ");
             Log.d(TAG, " Section : " + i);
-            Log.d(TAG, " Section Size : " + mCursor[i]);
-            byte[] tmp = mList[i];
+            Log.d(TAG, " Section Size : " + mSection.getSectionLength() + 3);
+            byte[] tmp = mSection.getSectionData();
             StringBuilder sb = new StringBuilder();
             for (int j = 0; j < tmp.length; j++) {
                 sb.append(" " + toHexString(tmp[j] & 0xFF));

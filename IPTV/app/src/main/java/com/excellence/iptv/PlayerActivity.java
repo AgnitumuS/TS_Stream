@@ -1,23 +1,35 @@
 package com.excellence.iptv;
 
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
+import android.view.Display;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import com.excellence.iptv.bean.Program;
+import com.excellence.iptv.bean.Ts;
+import com.excellence.iptv.bean.tables.Pmt;
 import com.excellence.iptv.fragment.LiveFragment;
 import com.excellence.iptv.view.RobotoRegularTextView;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
+
+import static java.lang.Integer.toHexString;
 
 /**
  * PlayerActivity
@@ -30,8 +42,12 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     private static final String TAG = "PlayerActivity";
     private static final int MESSAGE_SWITCH_BAR = 0;
 
+    private Ts mTs;
     private int mProgramNum;
-    private String mProgramName;
+    private List<Program> mProgramList;
+    private List<Pmt> mPmtList;
+    private Program mProgram;
+    private Pmt mPmt;
 
     private LinearLayout mTitleBarLl;
     private LinearLayout mInfoBarLl;
@@ -50,15 +66,29 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.player_activity);
 
+        // 获取传进来的数据
         Intent intent = getIntent();
+        mTs = (Ts) intent.getSerializableExtra(LiveFragment.KEY_TS);
         mProgramNum = intent.getIntExtra(LiveFragment.KEY_PROGRAM_NUM, -1);
-        mProgramName = intent.getStringExtra(LiveFragment.KEY_PROGRAM_NAME);
+        mProgramList = mTs.getProgramList();
+        mPmtList = mTs.getPmtList();
+        // 匹配节目
+        for (int i = 0; i < mProgramList.size(); i++) {
+            if (mProgramList.get(i).getProgramNumber() == mProgramNum) {
+                mProgram = mProgramList.get(i);
+                break;
+            }
+        }
+        // 匹配节目的 PMT 表
+        for (int i = 0; i < mPmtList.size(); i++) {
+            if (mPmtList.get(i).getProgramNumber() == mProgramNum) {
+                mPmt = mPmtList.get(i);
+                break;
+            }
+        }
+
 
         initView();
-
-        if (mBarIsShow) {
-            mHandler.sendEmptyMessageDelayed(MESSAGE_SWITCH_BAR, 5000);
-        }
     }
 
     private void initView() {
@@ -67,7 +97,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         backIv.setOnClickListener(this);
         RobotoRegularTextView titleTv = findViewById(R.id.tv_player_title);
         String str = getResources().getString(R.string.player_tv_title_bar_result);
-        str = String.format(str, mProgramNum, mProgramName);
+        str = String.format(str, mProgram.getProgramNumber(), mProgram.getProgramName());
         titleTv.setText(str);
 
         mInfoBarLl = findViewById(R.id.ll_info_bar);
@@ -94,6 +124,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             case R.id.iv_player_status:
                 mPlayerStatusIv.setSelected(mIsPlaying);
                 mIsPlaying = !mIsPlaying;
+                showPopupWindow();
                 break;
             case R.id.iv_player_back:
                 finish();
@@ -153,6 +184,39 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             }
         }
     }
+
+
+    private void showPopupWindow() {
+        //  获取屏幕的宽高像素
+        Display display = this.getWindow().getWindowManager().getDefaultDisplay();
+        DisplayMetrics metrics = new DisplayMetrics();
+        display.getMetrics(metrics);
+        int screenWidth = metrics.widthPixels;
+        int screenHeight = metrics.heightPixels;
+
+        View view = LayoutInflater.from(this).inflate(R.layout.player_popup_window_pmt, null);
+
+        PopupWindow popupWindow = new PopupWindow(view,
+                screenWidth / 5 * 4, screenHeight / 5 * 3, true);
+        popupWindow.setContentView(view);
+
+        TextView pmtIdTv = view.findViewById(R.id.tv_pmt_id);
+        TextView pmtResultTv = view.findViewById(R.id.tv_pmt_result);
+        String str = getResources().getString(R.string.player_popup_widow_tv_pmt_id_result);
+        str = String.format(str, toHexString(mProgram.getProgramMapPid()));
+        pmtIdTv.setText(str);
+        pmtResultTv.setText(mPmt.print());
+
+        // 外部可点击，即点击 PopupWindow 以外的区域，PopupWindow 消失
+        popupWindow.setBackgroundDrawable(new BitmapDrawable());
+        popupWindow.setOutsideTouchable(true);
+
+        // 将 PopupWindow 的实例放在一个父容器中，并定位
+        View locationView = LayoutInflater.from(this).inflate(R.layout.player_activity, null);
+        popupWindow.showAtLocation(locationView, Gravity.CENTER, 0, 0);
+
+    }
+
 
     @Override
     protected void onDestroy() {
