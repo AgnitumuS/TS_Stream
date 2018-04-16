@@ -18,7 +18,7 @@ public class Section {
 
 
     private int sectionCursor = 0;
-    private int nextContinuityCounter = 0;
+    private int nextContinuityCounter = -1;
     private byte[] sectionData;
 
 
@@ -34,8 +34,6 @@ public class Section {
         this.versionNumber = versionNumber;
         this.sectionNumber = sectionNumber;
         this.lastSectionNumber = lastSectionNumber;
-
-        sectionData = new byte[sectionLength + 3];
     }
 
 
@@ -59,6 +57,12 @@ public class Section {
         this.sectionData = sectionBuff;
     }
 
+    public boolean isUnFinish() {
+        if (sectionCursor != sectionLength + 3) {
+            return true;
+        }
+        return false;
+    }
 
     public int getTableId() {
         return tableId;

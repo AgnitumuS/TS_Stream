@@ -56,7 +56,7 @@ public class SelectFileActivity extends AppCompatActivity {
             Environment.getExternalStorageDirectory().getPath() + "/ts/";
 
     public static final int GET_LENGTH_AND_START = 0;
-    public static final int GET_PAT_AND_SDT = 1;
+    public static final int GET_PAT_SDT_EIT = 1;
     public static final int GET_PROGRAM_LIST = 2;
     public static final int GET_ALL_PMT = 3;
     public static final String KEY_TS_DATA = "TsData";
@@ -264,11 +264,10 @@ public class SelectFileActivity extends AppCompatActivity {
                     case GET_LENGTH_AND_START:
                         selectFileActivity.mLoadingTv.setText("Get packetLen and startPosition");
                         break;
-                    case GET_PAT_AND_SDT:
-                        selectFileActivity.mLoadingTv.setText("Get PAT and SDT");
+                    case GET_PAT_SDT_EIT:
+                        selectFileActivity.mLoadingTv.setText("Get PAT SDT EIT");
                         break;
                     case GET_PROGRAM_LIST:
-                        selectFileActivity.mLoadingTv.setText("Get programList");
                         break;
                     case GET_ALL_PMT:
                         // 关闭等待框

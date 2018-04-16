@@ -14,14 +14,23 @@ public class Program implements Serializable {
     private int programNumber;
     private int programMapPid;
     private String programName;
+    private String startTime;
+    private String duration;
+    private String endTime;
+    private String eventName;
 
     private boolean isFavorite = false;
 
-    public Program(int programNumber, int programMapPid, String programName) {
+    public Program(int programNumber, int programMapPid, String programName,
+                   String startTime, String duration, String endTime, String eventName) {
         super();
         this.programNumber = programNumber;
         this.programMapPid = programMapPid;
         this.programName = programName;
+        this.startTime = startTime;
+        this.duration = duration;
+        this.endTime = endTime;
+        this.eventName = eventName;
     }
 
     public int getProgramNumber() {
@@ -46,6 +55,30 @@ public class Program implements Serializable {
 
     public void setProgramMapPid(int programMapPid) {
         this.programMapPid = programMapPid;
+    }
+
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
+
+    public String getEventName() {
+        return eventName;
+    }
+
+    public void setEventName(String eventName) {
+        this.eventName = eventName;
     }
 
     public boolean getIsFavorite() {

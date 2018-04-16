@@ -29,23 +29,12 @@
             android:textSize="@dimen/live_item_text_size" />
 
         <com.excellence.iptv.view.RobotoRegularTextView
-            android:id="@+id/tv_program_eit_time"
+            android:id="@+id/tv_program_eit_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignLeft="@+id/tv_program_name"
+            android:text="@string/live_item_tv_eit_info"
             android:layout_below="@+id/tv_program_name"
-            android:text="@string/live_item_tv_eit_time"
-            android:textColor="@color/live_item_program_eit_text_color"
-            android:textSize="@dimen/live_item_text_size" />
-
-        <com.excellence.iptv.view.RobotoRegularTextView
-            android:id="@+id/tv_program_eit_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBottom="@+id/tv_program_eit_time"
-            android:layout_marginLeft="@dimen/margin_micro"
-            android:layout_toRightOf="@+id/tv_program_eit_time"
-            android:text="@string/live_item_tv_eit_name"
             android:textColor="@color/live_item_program_eit_text_color"
             android:textSize="@dimen/live_item_text_size" />
 

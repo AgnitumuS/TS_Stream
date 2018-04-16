@@ -13,8 +13,8 @@
     <string name="live_item_tv_program_num_result">%1$d</string>
     <string name="live_item_tv_program_name">Program Name</string>
     <string name="live_item_tv_program_name_result">%1$s</string>
-    <string name="live_item_tv_eit_time">00:00\-00:00</string>
-    <string name="live_item_tv_eit_name">No EPG</string>
+    <string name="live_item_tv_eit_info">No EPG</string>
+    <string name="live_item_tv_eit_info_result">%1$s\-%2$s\t%3$s</string>
 
     <string name="about_tv_title">About</string>
     <string name="about_tv_logo">IPTV</string>
@@ -30,8 +30,8 @@
     <string name="favorite_item_tv_program_info_result">%1$d %2$s</string>
 
     <string name="player_tv_title_bar_result">%1$d  %2$s</string>
-    <string name="player_tv_eit_time">00:00\-00:00</string>
-    <string name="player_tv_eit_name">No EPG</string>
+    <string name="player_tv_eit_info">No EPG</string>
+    <string name="player_tv_eit_info_result">%1$s\-%2$s\t%3$s</string>
     <string name="player_popup_widow_tv_pmt_id_result">PMT Pid : 0x%1$s</string>
 
 </resources>

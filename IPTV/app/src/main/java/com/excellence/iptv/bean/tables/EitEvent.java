@@ -11,6 +11,8 @@ import java.io.Serializable;
 
 public class EitEvent implements Serializable {
 
+    private int serviceId;
+
     /**
      * event_id : 16 bit
      */
@@ -21,13 +23,13 @@ public class EitEvent implements Serializable {
      * start_time_mjd : 16
      * start_time_bcd : 24
      */
-    private int startTimeMjd;
-    private int startTimeBcd;
+    private int startTimeDataMjd;
+    private byte[] startTimeBcd;
 
     /**
      * duration : 24 bit
      */
-    private int duration;
+    private byte[] duration;
 
     /**
      * running_status : 3 bit
@@ -55,12 +57,13 @@ public class EitEvent implements Serializable {
      */
     private String eventName;
 
-    public EitEvent(int eventId, int startTimeMjd, int startTimeBcd, int duration,
+    public EitEvent(int serviceId, int eventId, int startTimeDataMjd, byte[] startTimeBcd, byte[] duration,
                     int runningStatus, int freeCaMode, int descriptorsLoopLength,
                     int eventNameLength, String eventName) {
         super();
+        this.serviceId = serviceId;
         this.eventId = eventId;
-        this.startTimeMjd = startTimeMjd;
+        this.startTimeDataMjd = startTimeDataMjd;
         this.startTimeBcd = startTimeBcd;
         this.duration = duration;
         this.runningStatus = runningStatus;
@@ -68,6 +71,14 @@ public class EitEvent implements Serializable {
         this.descriptorsLoopLength = descriptorsLoopLength;
         this.eventNameLength = eventNameLength;
         this.eventName = eventName;
+    }
+
+    public int getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(int serviceId) {
+        this.serviceId = serviceId;
     }
 
     public int getEventId() {
@@ -78,27 +89,27 @@ public class EitEvent implements Serializable {
         this.eventId = eventId;
     }
 
-    public int getStartTimeMjd() {
-        return startTimeMjd;
+    public int getStartTimeDataMjd() {
+        return startTimeDataMjd;
     }
 
-    public void setStartTimeMjd(int startTimeMjd) {
-        this.startTimeMjd = startTimeMjd;
+    public void setStartTimeDataMjd(int startTimeDataMjd) {
+        this.startTimeDataMjd = startTimeDataMjd;
     }
 
-    public int getStartTimeBcd() {
+    public byte[] getStartTimeBcd() {
         return startTimeBcd;
     }
 
-    public void setStartTimeBcd(int startTimeBcd) {
+    public void setStartTimeBcd(byte[] startTimeBcd) {
         this.startTimeBcd = startTimeBcd;
     }
 
-    public int getDuration() {
+    public byte[] getDurationBcd() {
         return duration;
     }
 
-    public void setDuration(int duration) {
+    public void setDuration(byte[] duration) {
         this.duration = duration;
     }
 

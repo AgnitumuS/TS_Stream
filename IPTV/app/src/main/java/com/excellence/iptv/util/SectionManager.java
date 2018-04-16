@@ -71,24 +71,19 @@ public class SectionManager {
                 return -1;
             }
 
-
-            // 构建 Section 对象
-            mSection = new Section(tableId, sectionLength, transportStreamIdOrServiceId,
-                    versionNumber, sectionNumber, lastSectionNumber);
-
             // 匹配 TransportStreamIdOrServiceId ，寻找同组的 section
             if (mSectionList.size() != 0) {
                 List<Section> needToRefreshList = new ArrayList<>();
                 for (Section section : mSectionList) {
                     // 同组 section
-                    if (section.getTransportStreamIdOrServiceId() == mSection.getTransportStreamIdOrServiceId()) {
+                    if (section.getTransportStreamIdOrServiceId() == transportStreamIdOrServiceId) {
                         // 版本号不同
-                        if (section.getVersionNumber() != mSection.getVersionNumber()) {
+                        if (section.getVersionNumber() != versionNumber) {
                             // 版本更新
                             needToRefreshList.add(section);
                         } else {
                             // 版本号相同，判断 sectionNum 是否存在
-                            if (section.getSectionNumber() == mSection.getSectionNumber()){
+                            if (section.getSectionNumber() == sectionNumber) {
                                 Log.e(TAG, "Error old sectionNumber : 0x" + toHexString(sectionNumber));
                                 return -1;
                             }
@@ -98,11 +93,11 @@ public class SectionManager {
                 mSectionList.removeAll(needToRefreshList);
             }
 
-            // 取出待操作数据
-            int sectionSize = mSection.getSectionLength() + 3;
-            byte[] sectionData = mSection.getSectionData();
-            int sectionCursor = mSection.getSectionCursor();
-            int nextContinuityCounter = mSection.getNextContinuityCounter();
+            // 初始化
+            int sectionSize = sectionLength + 3;
+            byte[] sectionData = new byte[sectionSize];
+            int sectionCursor = 0;
+            int nextContinuityCounter = -1;
 
             // 判断当前包所含的 section 数据长度
             int theMaxEffectiveLength = packetLength - PACKET_HEADER_LENGTH - SKIP_ONE;
@@ -130,7 +125,9 @@ public class SectionManager {
                     nextContinuityCounter = 0;
                 }
             }
-            // 更新 mSection 值
+            // 构建 Section 对象
+            mSection = new Section(tableId, sectionLength, transportStreamIdOrServiceId,
+                    versionNumber, sectionNumber, lastSectionNumber);
             mSection.setSectionCursor(sectionCursor);
             mSection.setNextContinuityCounter(nextContinuityCounter);
             mSection.setSectionData(sectionData);
@@ -144,9 +141,9 @@ public class SectionManager {
             }
 
             // 匹配需要拼接的 sectionNumber
-            int unFinishSectionNumber = -1;
             for (Section section : mSectionList) {
-                if (section.getNextContinuityCounter() == continuityCounter) {
+                if (section.getNextContinuityCounter() == continuityCounter
+                        && section.isUnFinish()) {
                     mSection = section;
                     break;
                 }
@@ -160,7 +157,7 @@ public class SectionManager {
             int sectionSize = mSection.getSectionLength() + 3;
             byte[] sectionData = mSection.getSectionData();
             int sectionCursor = mSection.getSectionCursor();
-            int nextContinuityCounter = mSection.getNextContinuityCounter();
+            int nextContinuityCounter = -1;
 
             int theMaxEffectiveLength = packetLength - PACKET_HEADER_LENGTH;
             if (packetLength == PACKET_LENGTH_204) {
@@ -198,15 +195,21 @@ public class SectionManager {
 
 
     public List<Section> getSectionList() {
-        for (Section section : mSectionList) {
-            if (section.getSectionCursor() < section.getSectionLength() + 3) {
-                mSectionList.remove(section);
-            }
-        }
+
         if (mSectionList.size() == 0) {
             Log.e(TAG, "Error mSectionList.size() == 0");
             return null;
         }
+
+        // 清除未完成的 Section
+        List<Section> unFinishSectionList = new ArrayList<>();
+        for (Section section : mSectionList) {
+            if (section.isUnFinish()) {
+                unFinishSectionList.add(section);
+            }
+        }
+        mSectionList.removeAll(unFinishSectionList);
+
         return mSectionList;
     }
 

@@ -40,8 +40,12 @@ public class EitManager {
             if (mEit == null) {
                 mEit = new Eit(sectionData);
             } else {
+                int serviceId = (((sectionData[3] & 0xFF) << 8) | (sectionData[4] & 0xFF)) & 0xFFFF;
                 int sectionNumber = sectionData[6] & 0xFF;
+                int versionNumber = (sectionData[5] >> 1) & 0x1F;
+                mEit.setServiceId(serviceId);
                 mEit.setSectionNumber(sectionNumber);
+                mEit.setVersionNumber(versionNumber);
             }
             Log.d(TAG, " ---------------------------------------------- ");
             Log.d(TAG, " -- makeEit()");
@@ -62,14 +66,17 @@ public class EitManager {
             int theEffectiveLength = sectionSize - 14 - 4;
             for (int j = 0; j < theEffectiveLength; ) {
                 Log.d(TAG, " -- ");
+                int serviceId = mEit.getServiceId();
                 int eventId = (((sectionData[14 + j] & 0xFF) << 8) | (sectionData[15 + j] & 0xFF)) & 0xFFFF;
                 int startTimeMjd = (((sectionData[16 + j] & 0xFF) << 8) | (sectionData[17 + j] & 0xFF)) & 0xFFFF;
-                int startTimeBcd = (((sectionData[18 + j] & 0xFF) << 16)
-                        | ((sectionData[19 + j] & 0xFF) << 8)
-                        | (sectionData[20 + j] & 0xFF)) & 0xFFFFFF;
-                int duration = (((sectionData[21 + j] & 0xFF) << 16)
-                        | ((sectionData[22 + j] & 0xFF) << 8)
-                        | (sectionData[23 + j] & 0xFF)) & 0xFFFFFF;
+                byte[] startTimeBcd = new byte[3];
+                startTimeBcd[0] = sectionData[18 + j];
+                startTimeBcd[1] = sectionData[19 + j];
+                startTimeBcd[2] = sectionData[20 + j];
+                byte[] duration = new byte[3];
+                duration[0] = sectionData[21 + j];
+                duration[1] = sectionData[22 + j];
+                duration[2] = sectionData[23 + j];
                 int runningStatus = (sectionData[24 + j] >> 5) & 0x7;
                 int freeCaMode = (sectionData[24 + j] >> 4) & 0x1;
                 int descriptorsLoopLength = (((sectionData[24 + j] & 0xF) << 8) | (sectionData[25 + j] & 0xFF)) & 0xFFF;
@@ -80,13 +87,14 @@ public class EitManager {
                 for (int n = 0; n < eventNameLength; n++) {
                     strBytes[n] = sectionData[32 + j + n];
                 }
-                String eventName = new String(strBytes);
+                String eventName = new StringUtil(strBytes).makeString();
 
 
+                Log.d(TAG, "serviceId : 0x" + toHexString(serviceId));
                 Log.d(TAG, "eventId : 0x" + toHexString(eventId));
                 Log.d(TAG, "startTimeMjd : 0x" + toHexString(startTimeMjd));
-                Log.d(TAG, "startTimeBcd : 0x" + toHexString(startTimeBcd));
-                Log.d(TAG, "duration : 0x" + toHexString(duration));
+//                Log.d(TAG, "startTimeBcd : 0x" + toHexString(startTimeBcd));
+//                Log.d(TAG, "duration : 0x" + toHexString(duration));
                 Log.d(TAG, "runningStatus : 0x" + toHexString(runningStatus));
                 Log.d(TAG, "freeCaMode : 0x" + toHexString(freeCaMode));
                 Log.d(TAG, "descriptorsLoopLength : 0x" + toHexString(descriptorsLoopLength));
@@ -94,7 +102,7 @@ public class EitManager {
                 Log.d(TAG, "eventNameLength : " + eventNameLength);
                 Log.d(TAG, "eventName : " + eventName);
 
-                EitEvent eitEvent = new EitEvent(eventId, startTimeMjd, startTimeBcd, duration,
+                EitEvent eitEvent = new EitEvent(serviceId, eventId, startTimeMjd, startTimeBcd, duration,
                         runningStatus, freeCaMode, descriptorsLoopLength,
                         eventNameLength, eventName);
 

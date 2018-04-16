@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.excellence.iptv.R;
 import com.excellence.iptv.bean.Program;
@@ -24,6 +23,7 @@ import java.util.List;
 
 public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final String TAG = "ProgramListAdapter";
+    private static final String NULL_STRING = "null";
 
     private Context mContext;
     private List<Program> mList;
@@ -34,8 +34,7 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         View itemView;
         RobotoMediumTextView programNumTv;
         RobotoMediumTextView programNameTv;
-        RobotoRegularTextView programEitTimeTv;
-        RobotoRegularTextView programEitNameTv;
+        RobotoRegularTextView programEitInfoTv;
         ImageView addFavIv;
 
         public MyViewHolder(View v) {
@@ -43,8 +42,7 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             itemView = v;
             programNumTv = v.findViewById(R.id.tv_program_num);
             programNameTv = v.findViewById(R.id.tv_program_name);
-            programEitTimeTv = v.findViewById(R.id.tv_program_eit_time);
-            programEitNameTv = v.findViewById(R.id.tv_program_eit_name);
+            programEitInfoTv = v.findViewById(R.id.tv_program_eit_info);
             addFavIv = v.findViewById(R.id.iv_add_fav);
         }
     }
@@ -78,6 +76,18 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         strResult = mContext.getResources().getString(R.string.live_item_tv_program_name_result);
         strResult = String.format(strResult, mList.get(position).getProgramName());
         myViewHolder.programNameTv.setText(strResult);
+
+        String startTime = mList.get(position).getStartTime();
+        if (!startTime.equals(NULL_STRING)) {
+            startTime = startTime.substring(0, 5);
+            String endTime = mList.get(position).getEndTime();
+            endTime = endTime.substring(0, 5);
+            String eventName = mList.get(position).getEventName();
+            strResult = mContext.getResources().getString(R.string.live_item_tv_eit_info_result);
+            strResult = String.format(strResult, startTime, endTime, eventName);
+            myViewHolder.programEitInfoTv.setText(strResult);
+        }
+
 
         boolean isFavorite = mList.get(position).getIsFavorite();
         if (isFavorite) {

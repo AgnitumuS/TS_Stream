@@ -1,5 +1,6 @@
 package com.excellence.iptv.bean;
 
+import com.excellence.iptv.bean.tables.Eit;
 import com.excellence.iptv.bean.tables.Pat;
 import com.excellence.iptv.bean.tables.Pmt;
 import com.excellence.iptv.bean.tables.Sdt;
@@ -22,6 +23,7 @@ public class Ts implements Serializable {
     private int packetStartPosition = -1;
     private Pat pat = null;
     private Sdt sdt = null;
+    private Eit eit = null;
     private List<Pmt> pmtList = new ArrayList<>();
     private List<Program> programList = new ArrayList<>();
 
@@ -67,6 +69,14 @@ public class Ts implements Serializable {
 
     public void setSdt(Sdt sdt) {
         this.sdt = sdt;
+    }
+
+    public Eit getEit() {
+        return eit;
+    }
+
+    public void setEit(Eit eit) {
+        this.eit = eit;
     }
 
     public List<Pmt> getPmtList() {

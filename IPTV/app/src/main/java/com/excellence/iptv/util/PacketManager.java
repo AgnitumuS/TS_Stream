@@ -122,17 +122,17 @@ public class PacketManager {
                     */
                     boolean isFinish = true;
                     for (int i = 0; i < CYCLE_TEN_TIMES; i++) {
-                        // seek 188 bytes
+                        // seek 188 byteArray
                         long lg = fis.skip(PACKET_LENGTH_188 - 1);
                         if (lg != PACKET_LENGTH_188 - 1) {
                             // 如果长度不够，返回失败结果
-                            Log.e(TAG, "failed to skip " + (PACKET_LENGTH_188 - 1) + "bytes");
+                            Log.e(TAG, "failed to skip " + (PACKET_LENGTH_188 - 1) + "byteArray");
                             return -1;
                         }
                         tmp = fis.read();
                         Log.d(TAG, "skip " +
                                 PACKET_LENGTH_188 + " * " + (i + 1) +
-                                " bytes :  0x" + toHexString(tmp));
+                                " byteArray :  0x" + toHexString(tmp));
 
                         // determine the length of the packet is not the 188
                         if (tmp != PACKET_HEADER_SYNC_BYTE) {
@@ -141,14 +141,14 @@ public class PacketManager {
                             if (lg != (-1) * PACKET_LENGTH_188 * (i + 1)) {
                                 Log.e(TAG, "failed to skip " +
                                         "(-1) * " + PACKET_LENGTH_188 + " * " + (i + 1) +
-                                        " bytes");
+                                        " byteArray");
                                 return -1;
                             }
 
                             isFinish = false;
                             Log.d(TAG, "skip " +
                                     "(-1) * " + PACKET_LENGTH_188 + " * " + (i + 1) +
-                                    " bytes");
+                                    " byteArray");
                             // 跳出 10 次检测
                             break;
                         }
@@ -168,17 +168,17 @@ public class PacketManager {
                     */
                     isFinish = true;
                     for (int i = 0; i < CYCLE_TEN_TIMES; i++) {
-                        // seek 204 bytes
+                        // seek 204 byteArray
                         long lg = fis.skip(PACKET_LENGTH_204 - 1);
                         if (lg != PACKET_LENGTH_204 - 1) {
                             // 如果长度不够，返回失败结果
-                            Log.e(TAG, "failed to skip " + (PACKET_LENGTH_204 - 1) + "bytes");
+                            Log.e(TAG, "failed to skip " + (PACKET_LENGTH_204 - 1) + "byteArray");
                             return -1;
                         }
                         tmp = fis.read();
                         Log.d(TAG, "skip " +
                                 PACKET_LENGTH_204 + " * " + (i + 1) +
-                                " bytes :  0x" + toHexString(tmp));
+                                " byteArray :  0x" + toHexString(tmp));
 
                         // determine the length of the packet is not the 204
                         if (tmp != PACKET_HEADER_SYNC_BYTE) {
@@ -187,14 +187,14 @@ public class PacketManager {
                             if (lg != (-1) * PACKET_LENGTH_204 * (i + 1)) {
                                 Log.e(TAG, "failed to skip " +
                                         "(-1) * " + PACKET_LENGTH_204 + " * " + (i + 1) +
-                                        " bytes");
+                                        " byteArray");
                                 return -1;
                             }
 
                             isFinish = false;
                             Log.d(TAG, "skip " +
                                     "(-1) * " + PACKET_LENGTH_204 + " * " + (i + 1) +
-                                    " bytes");
+                                    " byteArray");
                             // 跳出 10 次检测
                             break;
                         }
@@ -248,7 +248,7 @@ public class PacketManager {
             // 跳到包的开始位置
             long lg = fis.skip(mPacketStartPosition);
             if (lg != mPacketStartPosition) {
-                Log.e(TAG, "failed to skip " + mPacketStartPosition + "bytes");
+                Log.e(TAG, "failed to skip " + mPacketStartPosition + "byteArray");
                 return -1;
             }
 
@@ -329,7 +329,7 @@ public class PacketManager {
             // 跳到包的开始位置
             long lg = fis.skip(mPacketStartPosition);
             if (lg != mPacketStartPosition) {
-                Log.e(TAG, "failed to skip " + mPacketStartPosition + "bytes");
+                Log.e(TAG, "failed to skip " + mPacketStartPosition + "byteArray");
                 return -1;
             }
 
@@ -423,11 +423,11 @@ public class PacketManager {
      * 合成节目列表：ProgramList
      */
     public int parseToProgramList() {
-        if (mPat == null && mSdt == null) {
+        if (mPat == null || mSdt == null || mEit == null) {
             return -1;
         }
         ProgramManager programManager = new ProgramManager();
-        mProgramList = programManager.makeProgramList(mPat, mSdt);
+        mProgramList = programManager.makeProgramList(mPat, mSdt, mEit);
         return 0;
     }
 
@@ -494,6 +494,14 @@ public class PacketManager {
 
     public void setSdt(Sdt mSdt) {
         this.mSdt = mSdt;
+    }
+
+    public Eit getEit() {
+        return mEit;
+    }
+
+    public void setEit(Eit mEit) {
+        this.mEit = mEit;
     }
 
     public Pmt getPmt() {

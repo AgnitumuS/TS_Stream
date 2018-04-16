@@ -55,20 +55,11 @@
                 android:src="@drawable/player_iv_status" />
 
             <com.excellence.iptv.view.RobotoRegularTextView
-                android:id="@+id/tv_player_eit_time"
+                android:id="@+id/tv_player_eit_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/margin_micro_little"
-                android:text="@string/player_tv_eit_time"
-                android:textColor="@color/colorWhite"
-                android:textSize="@dimen/player_info_text_size" />
-
-            <com.excellence.iptv.view.RobotoRegularTextView
-                android:id="@+id/tv_player_eit_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/margin_micro_little"
-                android:text="@string/player_tv_eit_name"
+                android:text="@string/player_tv_eit_info"
                 android:textColor="@color/colorWhite"
                 android:textSize="@dimen/player_info_text_size" />
 

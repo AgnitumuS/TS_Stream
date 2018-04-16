@@ -4,7 +4,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 
-import com.excellence.iptv.bean.Program;
 import com.excellence.iptv.bean.Ts;
 import com.excellence.iptv.bean.tables.Eit;
 import com.excellence.iptv.bean.tables.Pat;
@@ -17,7 +16,7 @@ import java.util.List;
 
 import static com.excellence.iptv.SelectFileActivity.GET_ALL_PMT;
 import static com.excellence.iptv.SelectFileActivity.GET_LENGTH_AND_START;
-import static com.excellence.iptv.SelectFileActivity.GET_PAT_AND_SDT;
+import static com.excellence.iptv.SelectFileActivity.GET_PAT_SDT_EIT;
 import static com.excellence.iptv.SelectFileActivity.GET_PROGRAM_LIST;
 
 /**
@@ -72,12 +71,16 @@ public class TsThread extends Thread {
             mPacketManager.setPat(pat);
         }
         Sdt sdt = mTs.getSdt();
-        if (pat != null) {
+        if (sdt != null) {
             mPacketManager.setSdt(sdt);
+        }
+        Eit eit = mTs.getEit();
+        if (eit != null) {
+            mPacketManager.setEit(eit);
         }
         List<Pmt> pmtList = mTs.getPmtList();
         if (pmtList.size() != 0) {
-            // 证明已获取了全部数据
+            // 已获取了全部数据
             mHandler.sendEmptyMessage(GET_ALL_PMT);
             return;
         }
@@ -95,8 +98,9 @@ public class TsThread extends Thread {
                 mHandler.sendEmptyMessage(GET_LENGTH_AND_START);
             }
         }
-        // 解 PAT 、SDT
-        if (mPacketManager.getPat() == null || mPacketManager.getSdt() == null) {
+        // 解 PAT、SDT、EIT
+        if (mPacketManager.getPat() == null || mPacketManager.getSdt() == null
+                || mPacketManager.getEit() == null) {
             int[][] searchArray = new int[3][2];
             searchArray[0][0] = PAT_PID;
             searchArray[0][1] = PAT_TABLE_ID;
@@ -104,15 +108,17 @@ public class TsThread extends Thread {
             searchArray[1][1] = SDT_TABLE_ID;
             searchArray[2][0] = EIT_PID;
             searchArray[2][1] = EIT_TABLE_ID;
+            // 开始匹配
             int err = mPacketManager.matchData(mInputFilePath, searchArray);
             if (err == -1) {
-                Log.e(TAG, "Failed to get PAT and SDT");
+                Log.e(TAG, "Failed to get PAT SDT EIT");
                 return;
             } else {
-                // 保存 PAT 、SDT
+                // 保存 PAT、SDT、EIT
                 mTs.setPat(mPacketManager.getPat());
                 mTs.setSdt(mPacketManager.getSdt());
-                mHandler.sendEmptyMessage(GET_PAT_AND_SDT);
+                mTs.setEit(mPacketManager.getEit());
+                mHandler.sendEmptyMessage(GET_PAT_SDT_EIT);
 
                 // 合成为节目列表 ProgramList
                 int error = mPacketManager.parseToProgramList();

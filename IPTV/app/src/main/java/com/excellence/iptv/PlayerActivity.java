@@ -40,6 +40,7 @@ import static java.lang.Integer.toHexString;
 
 public class PlayerActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "PlayerActivity";
+    private static final String NULL_STRING = "null";
     private static final int MESSAGE_SWITCH_BAR = 0;
 
     private Ts mTs;
@@ -103,8 +104,17 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         mInfoBarLl = findViewById(R.id.ll_info_bar);
         mPlayerStatusIv = findViewById(R.id.iv_player_status);
         mPlayerStatusIv.setOnClickListener(this);
-        RobotoRegularTextView eitTimeTv = findViewById(R.id.tv_player_eit_time);
-        RobotoRegularTextView eitNameTv = findViewById(R.id.tv_program_eit_name);
+        RobotoRegularTextView eitInfoTv = findViewById(R.id.tv_player_eit_info);
+        String startTime = mProgram.getStartTime();
+        if (!startTime.equals(NULL_STRING)) {
+            startTime = startTime.substring(0, 5);
+            String endTime = mProgram.getEndTime();
+            endTime = endTime.substring(0, 5);
+            String eventName = mProgram.getEventName();
+            String strResult = getResources().getString(R.string.player_tv_eit_info_result);
+            strResult = String.format(strResult, startTime, endTime, eventName);
+            eitInfoTv.setText(strResult);
+        }
 
 
         ImageView playerIv = findViewById(R.id.iv_player);
