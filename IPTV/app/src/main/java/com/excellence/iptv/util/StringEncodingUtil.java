@@ -5,17 +5,17 @@ import java.io.UnsupportedEncodingException;
 import static java.lang.Integer.toHexString;
 
 /**
- * StringUtil
+ * StringEncodingUtil
  *
  * @author ggz
  * @date 2018/4/10
  */
 
-public class StringUtil {
+public class StringEncodingUtil {
 
     byte[] byteArray;
 
-    public StringUtil(byte[] byteArray) {
+    public StringEncodingUtil(byte[] byteArray) {
         super();
         this.byteArray = byteArray;
     }

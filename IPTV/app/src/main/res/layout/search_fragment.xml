@@ -28,6 +28,7 @@
                 android:layout_marginLeft="@dimen/margin_micro"
                 android:layout_weight="1"
                 android:hint="@string/live_search_et_hint"
+                android:imeOptions="actionSearch"
                 android:singleLine="true"
                 android:textColor="@color/live_search_edit_text_color"
                 android:textSize="@dimen/live_search_text_size"
@@ -61,32 +62,40 @@
         android:layout_height="match_parent"
         android:visibility="gone" />
 
-    <RelativeLayout
-        android:id="@+id/rl_history"
+    <LinearLayout
+        android:id="@+id/ll_search_history"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/search_history_rl_height"
-        android:gravity="center_vertical">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <com.excellence.iptv.view.RobotoMediumTextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/margin_micro_little_plus"
-            android:text="@string/search_tv_history"
-            android:textColor="@color/colorBlack"
-            android:textSize="@dimen/text_size_micro" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/search_history_rl_height"
+            android:gravity="center_vertical">
 
-        <ImageView
-            android:id="@+id/iv_clear_tag"
-            android:layout_width="@dimen/search_delete_iv_width"
-            android:layout_height="@dimen/search_delete_iv_height"
-            android:layout_alignParentRight="true"
-            android:layout_marginRight="@dimen/margin_micro_little_plus"
-            android:src="@drawable/ic_delete" />
-    </RelativeLayout>
+            <com.excellence.iptv.view.RobotoMediumTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/margin_micro_little_plus"
+                android:text="@string/search_tv_history"
+                android:textColor="@color/colorBlack"
+                android:textSize="@dimen/text_size_micro" />
 
-    <com.excellence.iptv.view.FlowLayout
-        android:id="@+id/flow_layout_history_tag"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+            <ImageView
+                android:id="@+id/iv_clear_tag"
+                android:layout_width="@dimen/search_delete_iv_width"
+                android:layout_height="@dimen/search_delete_iv_height"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="@dimen/margin_micro_little_plus"
+                android:src="@drawable/ic_delete" />
+        </RelativeLayout>
+
+        <com.excellence.iptv.view.FlowLayout
+            android:id="@+id/flow_layout_history_tag"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
 
 </LinearLayout>

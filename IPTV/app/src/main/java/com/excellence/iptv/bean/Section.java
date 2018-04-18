@@ -18,7 +18,7 @@ public class Section {
 
 
     private int sectionCursor = 0;
-    private int nextContinuityCounter = -1;
+    private int nextContinuityCounter;
     private byte[] sectionData;
 
 

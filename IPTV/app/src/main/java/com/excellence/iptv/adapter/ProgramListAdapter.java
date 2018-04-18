@@ -68,7 +68,7 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
-        final MyViewHolder myViewHolder = (MyViewHolder) holder;
+        MyViewHolder myViewHolder = (MyViewHolder) holder;
         String strResult = mContext.getResources().getString(R.string.live_item_tv_program_num_result);
         strResult = String.format(strResult, mList.get(position).getProgramNumber());
         myViewHolder.programNumTv.setText(strResult);
@@ -86,6 +86,9 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             strResult = mContext.getResources().getString(R.string.live_item_tv_eit_info_result);
             strResult = String.format(strResult, startTime, endTime, eventName);
             myViewHolder.programEitInfoTv.setText(strResult);
+        } else {
+            strResult = mContext.getResources().getString(R.string.live_item_tv_eit_info);
+            myViewHolder.programEitInfoTv.setText(strResult);
         }
 
 
@@ -98,12 +101,12 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         myViewHolder.addFavIv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (myViewHolder.addFavIv.isSelected()) {
+                if (v.isSelected()) {
                     mList.get(position).setIsFavorite(false);
-                    myViewHolder.addFavIv.setSelected(false);
+                    v.setSelected(false);
                 } else {
                     mList.get(position).setIsFavorite(true);
-                    myViewHolder.addFavIv.setSelected(true);
+                    v.setSelected(true);
                 }
 
             }
@@ -113,8 +116,7 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             myViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    int pos = myViewHolder.getLayoutPosition();
-                    mOnItemClickListener.onItemClick(myViewHolder.itemView, pos);
+                    mOnItemClickListener.onItemClick(v, position);
                 }
             });
         }

@@ -3,6 +3,8 @@ package com.excellence.iptv.util;
 import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
+import android.util.SparseArray;
+import android.util.SparseIntArray;
 
 import com.excellence.iptv.SelectFileActivity;
 import com.excellence.iptv.bean.Packet;
@@ -111,9 +113,9 @@ public class PacketManager {
                 Log.d(TAG, "current position : " + mPacketStartPosition +
                         "   0x" + toHexString(tmp));
 
-                // matchData to 0x47
+                // matchSection to 0x47
                 if (tmp == PACKET_HEADER_SYNC_BYTE) {
-                    Log.d(TAG, "matchData to 0x" + toHexString(PACKET_HEADER_SYNC_BYTE));
+                    Log.d(TAG, "matchSection to 0x" + toHexString(PACKET_HEADER_SYNC_BYTE));
 
                     /*
                     循环 10 次跳 188
@@ -221,20 +223,12 @@ public class PacketManager {
 
 
     /**
-     * 单次匹配指定 PID 和 table_id
+     * 匹配指定 PID
+     * 找到音视频文件
      */
-    public int matchPidTableId(String inputFilePath, int inputPid, int inputTableId) {
-        Log.d(TAG, " -- matchPidTableId()");
+    public int matchPid(String inputFilePath, int[] inputPid, String[] outputFilePath) {
+        Log.d(TAG, " -- matchPid()");
         mInputFilePath = inputFilePath;
-        mInputPID = inputPid;
-        mInputTableID = inputTableId;
-        Log.d(TAG, "inputFilePath : " + mInputFilePath);
-        Log.d(TAG, "outputFilePath : " + mOutputFilePath);
-
-        mSectionManagerList.clear();
-        SectionManager sectionManager = new SectionManager();
-        mSectionManagerList.add(sectionManager);
-
 
         // 如果 PacketLength PacketStartPosition 的值为异常，重新 matchPacketLength()
         if (mPacketLength == -1 || mPacketStartPosition == -1) {
@@ -242,17 +236,24 @@ public class PacketManager {
         }
 
         try {
-            FileInputStream fis = new FileInputStream(mInputFilePath);
-            FileOutputStream fos = new FileOutputStream(mOutputFilePath);
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(mInputFilePath));
+//            FileInputStream fis = new FileInputStream(mInputFilePath);
+
+            SparseIntArray sparseIntArray = new SparseIntArray();
+            List<FileOutputStream> fileOutputStreamList = new ArrayList<>();
+            for (int i = 0; i < inputPid.length; i++) {
+                FileOutputStream fos = new FileOutputStream(outputFilePath[i]);
+                fileOutputStreamList.add(fos);
+                sparseIntArray.put(inputPid[i], i);
+            }
 
             // 跳到包的开始位置
-            long lg = fis.skip(mPacketStartPosition);
+            long lg = bis.skip(mPacketStartPosition);
             if (lg != mPacketStartPosition) {
                 Log.e(TAG, "failed to skip " + mPacketStartPosition + "byteArray");
                 return -1;
             }
 
-            mPacketNum = 0;
             int err;
             do {
                 // 中断查找
@@ -263,59 +264,52 @@ public class PacketManager {
                 }
 
                 byte[] buff = new byte[mPacketLength];
-                err = fis.read(buff);
+                err = bis.read(buff);
                 if (err == mPacketLength) {
                     if (buff[0] == PACKET_HEADER_SYNC_BYTE) {
                         // 构建 packet 对象
                         Packet packet = new Packet(buff);
 
                         // 匹配 pid
-                        if (packet.getPid() == mInputPID) {
-                            mPacketNum++;
-
-                            // 匹配 section
-                            int result = mSectionManagerList.get(0).matchSection(packet, mInputTableID);
-
+                        int position = sparseIntArray.get(packet.getPid(), -1);
+                        if (position != -1) {
                             // 写出文件
-                            fos.write(buff);
+                            fileOutputStreamList.get(position).write(buff);
                         }
+
                     }
                 }
             } while (err != -1);
 
-            fos.close();
-            fis.close();
+            // 关闭文件
+            for (FileOutputStream fos : fileOutputStreamList) {
+                fos.close();
+            }
+            bis.close();
+
         } catch (IOException e) {
             Log.e(TAG, "IOException : 打开文件失败");
             e.printStackTrace();
         }
 
-        // 打印 section 结果
-        mSectionManagerList.get(0).print();
-
-        // 解表
-        parseToTable(mSectionManagerList.get(0).getSectionList(), mInputPID);
-
-        Log.d(TAG, " ---------------------------------------------- ");
-        Log.d(TAG, "the number of the Packet's PID = 0x" + toHexString(mInputPID)
-                + " is " + mPacketNum);
-        Log.d(TAG, "success to write file to " + mOutputFilePath);
-
-        return mPacketNum;
+        return 0;
     }
 
 
-    public int matchData(String inputFilePath, int[][] searchArray) {
-        Log.d(TAG, " -- matchData()");
+    public int matchSection(String inputFilePath, int[][] searchArray) {
+        Log.d(TAG, " -- matchSection()");
 
         mInputFilePath = inputFilePath;
 
         // 准备 SectionManager
+        SparseIntArray sparseIntArray = new SparseIntArray();
         mSectionManagerList.clear();
         for (int i = 0; i < searchArray.length; i++) {
             SectionManager sectionManager = new SectionManager();
             mSectionManagerList.add(sectionManager);
+            sparseIntArray.put(searchArray[i][0], i);
         }
+
 
         // 如果 PacketLength PacketStartPosition 的值为异常，重新 matchPacketLength()
         if (mPacketLength == -1 || mPacketStartPosition == -1) {
@@ -323,11 +317,11 @@ public class PacketManager {
         }
 
         try {
-            BufferedInputStream fis = new BufferedInputStream(new FileInputStream(mInputFilePath));
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(mInputFilePath));
 //            FileInputStream fis = new FileInputStream(mInputFilePath);
 
             // 跳到包的开始位置
-            long lg = fis.skip(mPacketStartPosition);
+            long lg = bis.skip(mPacketStartPosition);
             if (lg != mPacketStartPosition) {
                 Log.e(TAG, "failed to skip " + mPacketStartPosition + "byteArray");
                 return -1;
@@ -338,26 +332,21 @@ public class PacketManager {
                 // 中断查找
                 if (mInterrupt) {
                     mInterrupt = false;
-                    Log.e(TAG, "matchData() mInterrupt !!!");
+                    Log.e(TAG, "matchSection() mInterrupt !!!");
                     return -1;
                 }
 
                 byte[] buff = new byte[mPacketLength];
-                err = fis.read(buff);
+                err = bis.read(buff);
                 if (err == mPacketLength) {
                     if (buff[0] == PACKET_HEADER_SYNC_BYTE) {
                         // 构建 packet 对象
                         Packet packet = new Packet(buff);
 
-                        // 匹配 pid
-                        for (int i = 0; i < searchArray.length; i++) {
-                            if (packet.getPid() == searchArray[i][0]) {
-                                // 匹配 section
-                                SectionManager sectionManager = mSectionManagerList.get(i);
-                                sectionManager.matchSection(packet, searchArray[i][1]);
-
-                                break;
-                            }
+                        int position = sparseIntArray.get(packet.getPid(), -1);
+                        if (position != -1) {
+                            SectionManager sectionManager = mSectionManagerList.get(position);
+                            sectionManager.matchSection(packet, searchArray[position][1]);
                         }
                     }
                 }
@@ -365,7 +354,7 @@ public class PacketManager {
 
             } while (err != -1);
 
-            fis.close();
+            bis.close();
 
         } catch (IOException e) {
             Log.e(TAG, "IOException : 打开文件失败");
@@ -388,7 +377,6 @@ public class PacketManager {
      * 3）合成 PMT 表
      */
     private void parseToTable(List<Section> list, int pid) {
-        Log.d(TAG, " -- parseToTable()");
         if (list == null) {
             Log.e(TAG, "Section List == null !!!");
             return;

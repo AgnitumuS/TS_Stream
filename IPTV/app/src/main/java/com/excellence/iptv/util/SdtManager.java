@@ -22,6 +22,7 @@ import static java.lang.Integer.toHexString;
 
 public class SdtManager {
     private static final String TAG = "SdtManager";
+    private static final boolean IS_LOG = false;
 
     private Sdt mSdt = null;
     private List<SdtService> mSdtServiceList = new ArrayList<>();
@@ -43,17 +44,20 @@ public class SdtManager {
                 int sectionNumber = sectionData[6] & 0xFF;
                 mSdt.setSectionNumber(sectionNumber);
             }
-            Log.d(TAG, " ---------------------------------------------- ");
-            Log.d(TAG, " -- makeSDT()");
-            Log.d(TAG, "tableId : 0x" + toHexString(mSdt.getTableId()));
-            Log.d(TAG, "sectionSyntaxIndicator : 0x" + toHexString(mSdt.getSectionSyntaxIndicator()));
-            Log.d(TAG, "sectionLength : 0x" + toHexString(mSdt.getSectionLength()));
-            Log.d(TAG, "transportStreamId : 0x" + toHexString(mSdt.getTransportStreamId()));
-            Log.d(TAG, "versionNumber : 0x" + toHexString(mSdt.getVersionNumber()));
-            Log.d(TAG, "currentNextIndicator : 0x" + toHexString(mSdt.getCurrentNextIndicator()));
-            Log.d(TAG, "sectionNumber : 0x" + toHexString(mSdt.getSectionNumber()));
-            Log.d(TAG, "lastSectionNumber : 0x" + toHexString(mSdt.getLastSectionNumber()));
-            Log.d(TAG, "originalNetworkId : 0x" + toHexString(mSdt.getOriginalNetworkId()));
+            if (IS_LOG) {
+                Log.d(TAG, " ---------------------------------------------- ");
+                Log.d(TAG, " -- makeSDT()");
+                Log.d(TAG, "tableId : 0x" + toHexString(mSdt.getTableId()));
+                Log.d(TAG, "sectionSyntaxIndicator : 0x" + toHexString(mSdt.getSectionSyntaxIndicator()));
+                Log.d(TAG, "sectionLength : 0x" + toHexString(mSdt.getSectionLength()));
+                Log.d(TAG, "transportStreamId : 0x" + toHexString(mSdt.getTransportStreamId()));
+                Log.d(TAG, "versionNumber : 0x" + toHexString(mSdt.getVersionNumber()));
+                Log.d(TAG, "currentNextIndicator : 0x" + toHexString(mSdt.getCurrentNextIndicator()));
+                Log.d(TAG, "sectionNumber : 0x" + toHexString(mSdt.getSectionNumber()));
+                Log.d(TAG, "lastSectionNumber : 0x" + toHexString(mSdt.getLastSectionNumber()));
+                Log.d(TAG, "originalNetworkId : 0x" + toHexString(mSdt.getOriginalNetworkId()));
+            }
+
 
             /*
             * to reserved_future_use : 11 byte
@@ -85,7 +89,6 @@ public class SdtManager {
             int sectionSize = sectionData.length;
             int theEffectiveLength = sectionSize - 15;
             for (int j = 0; j < theEffectiveLength; ) {
-                Log.d(TAG, " -- ");
                 int serviceId = (((sectionData[11 + j] & 0xFF) << 8) | (sectionData[12 + j] & 0xFF)) & 0xFFFF;
                 int eitScheduleFlag = (sectionData[13 + j] >> 1) & 0x1;
                 int eitPresentFollowingFlag = sectionData[13 + j] & 0x1;
@@ -108,18 +111,22 @@ public class SdtManager {
                 }
                 String serviceName = new String(strBytes);
 
-                Log.d(TAG, "serviceId : 0x" + toHexString(serviceId));
-                Log.d(TAG, "eitScheduleFlag : 0x" + toHexString(eitScheduleFlag));
-                Log.d(TAG, "eitPresentFollowingFlag : 0x" + toHexString(eitPresentFollowingFlag));
-                Log.d(TAG, "runningStatus : 0x" + toHexString(runningStatus));
-                Log.d(TAG, "freeCaMode : 0x" + toHexString(freeCaMode));
-                Log.d(TAG, "descriptorsLoopLength : 0x" + toHexString(descriptorsLoopLength));
-                Log.d(TAG, "descriptor_length : " + descriptor_length);
-                Log.d(TAG, "serviceType : 0x" + toHexString(serviceType));
-                Log.d(TAG, "serviceProviderNameLength : " + serviceProviderNameLength);
-                Log.d(TAG, "serviceProviderName : " + serviceProviderName);
-                Log.d(TAG, "serviceNameLength : " + serviceNameLength);
-                Log.d(TAG, "serviceName : " + serviceName);
+                if (IS_LOG) {
+                    Log.d(TAG, " -- ");
+                    Log.d(TAG, "serviceId : 0x" + toHexString(serviceId));
+                    Log.d(TAG, "eitScheduleFlag : 0x" + toHexString(eitScheduleFlag));
+                    Log.d(TAG, "eitPresentFollowingFlag : 0x" + toHexString(eitPresentFollowingFlag));
+                    Log.d(TAG, "runningStatus : 0x" + toHexString(runningStatus));
+                    Log.d(TAG, "freeCaMode : 0x" + toHexString(freeCaMode));
+                    Log.d(TAG, "descriptorsLoopLength : 0x" + toHexString(descriptorsLoopLength));
+                    Log.d(TAG, "descriptor_length : " + descriptor_length);
+                    Log.d(TAG, "serviceType : 0x" + toHexString(serviceType));
+                    Log.d(TAG, "serviceProviderNameLength : " + serviceProviderNameLength);
+                    Log.d(TAG, "serviceProviderName : " + serviceProviderName);
+                    Log.d(TAG, "serviceNameLength : " + serviceNameLength);
+                    Log.d(TAG, "serviceName : " + serviceName);
+                }
+
 
                 SdtService sdtService = new SdtService(
                         serviceId, eitScheduleFlag, eitPresentFollowingFlag,

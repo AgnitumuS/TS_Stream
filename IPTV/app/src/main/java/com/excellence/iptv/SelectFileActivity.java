@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -30,12 +31,12 @@ import android.widget.Toast;
 
 import com.excellence.iptv.adapter.FileListAdapter;
 import com.excellence.iptv.bean.Ts;
+import com.excellence.iptv.thread.TraverseFileThread;
 import com.excellence.iptv.thread.TsThread;
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
-import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,11 +56,14 @@ public class SelectFileActivity extends AppCompatActivity {
     private static final String TS_FOLDER_PATH =
             Environment.getExternalStorageDirectory().getPath() + "/ts/";
 
-    public static final int GET_LENGTH_AND_START = 0;
-    public static final int GET_PAT_SDT_EIT = 1;
-    public static final int GET_PROGRAM_LIST = 2;
-    public static final int GET_ALL_PMT = 3;
+    public static final int GET_FILE = 0;
+    public static final int GET_LENGTH_AND_START = 1;
+    public static final int GET_PAT_SDT_EIT = 2;
+    public static final int GET_PROGRAM_LIST = 3;
+    public static final int GET_ALL_PMT = 4;
     public static final String KEY_TS_DATA = "TsData";
+
+    private MyHandler mHandler;
 
     private SmartRefreshLayout mRefreshLayout;
     private FileListAdapter mFileListAdapter;
@@ -70,10 +74,11 @@ public class SelectFileActivity extends AppCompatActivity {
     private List<String> mFilePathList = new ArrayList<>();
 
     private String mInputFilePath;
-    private MyHandler mHandler = new MyHandler(this);
     private Ts mTs;
     private List<Ts> mTsList = new ArrayList<>();
-    private TsThread mTsThread;
+
+    private TraverseFileThread mTraverseFileThread = null;
+    private TsThread mTsThread = null;
 
     private long mExitTime;
 
@@ -82,48 +87,19 @@ public class SelectFileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.select_file_activity);
 
+        mHandler = new MyHandler(this);
+
         // 判断 Android 版本是否大于 23 （Android 6.0）
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Request Read And Write Permission
             requestPermission();
         }
 
-        // 遍历 ts 文件夹
-        mFileNameList.clear();
-        mFilePathList.clear();
-        traverseTsFile(TS_FOLDER_PATH);
-
         // 显示文件列表
         initRecyclerView();
-        initSmartRefreshLayout();
-    }
 
-    /**
-     * 遍历 TS 文件夹
-     */
-    private void traverseTsFile(String path) {
-        File dir = new File(path);
-        File[] files = dir.listFiles();
-        if (files == null) {
-            return;
-        }
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].isDirectory()) {
-                // 递归
-                traverseTsFile(files[i].getAbsolutePath());
-            } else {
-                String fileName = files[i].getName();
-                mFileNameList.add(fileName);
-                mFilePathList.add(files[i].getAbsolutePath());
-//                //判断后缀
-//                int j = fileName.lastIndexOf(".");
-//                String suffix = fileName.substring(j + 1);
-//                if (suffix.equalsIgnoreCase("ts")) {
-//                    mFileNameList.add(fileName);
-//                    mFilePathList.add(files[i].getAbsolutePath());
-//                }
-            }
-        }
+        initSmartRefreshLayout();
+
     }
 
     /**
@@ -174,26 +150,32 @@ public class SelectFileActivity extends AppCompatActivity {
      */
     private void initSmartRefreshLayout() {
         mRefreshLayout = findViewById(R.id.refresh_layout_refresh_file_list);
+        if (mFileNameList.size() == 0) {
+            mRefreshLayout.autoRefresh();
+        }
+
         mRefreshLayout.setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh(RefreshLayout refreshlayout) {
                 if (requestPermission()) {
-                    mFileNameList.clear();
-                    mFilePathList.clear();
-                    traverseTsFile(TS_FOLDER_PATH);
-                    mFileListAdapter.notifyDataSetChanged();
-                    mRefreshLayout.finishRefresh(true);
+                    // 显示等待框
+                    showPopupWindow();
+                    // 开启线程,遍历文件
+                    traverseFile();
                 }
 
-                // 刷新超时 2 秒
-                refreshlayout.getLayout().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mRefreshLayout.finishRefresh(false);
-                    }
-                }, 2000);
+                refreshlayout.finishRefresh();
             }
         });
+    }
+
+    /**
+     * 遍历 TS 文件夹
+     */
+    private void traverseFile() {
+        // 开启线程
+        mTraverseFileThread = new TraverseFileThread(TS_FOLDER_PATH, mHandler, mFilePathList, mFileNameList);
+        mTraverseFileThread.start();
     }
 
     /**
@@ -236,7 +218,12 @@ public class SelectFileActivity extends AppCompatActivity {
             @Override
             public void onDismiss() {
                 // 中断线程
-                mTsThread.setOver();
+                if (mTsThread != null) {
+                    mTsThread.setOver();
+                }
+                if (mTraverseFileThread != null) {
+                    mTraverseFileThread.setOver();
+                }
             }
         });
     }
@@ -261,16 +248,34 @@ public class SelectFileActivity extends AppCompatActivity {
 
             if (selectFileActivity != null) {
                 switch (msg.what) {
+                    case GET_FILE:
+                        selectFileActivity.mPopupWindow.dismiss();
+                        selectFileActivity.mFileListAdapter.notifyDataSetChanged();
+                        break;
                     case GET_LENGTH_AND_START:
-                        selectFileActivity.mLoadingTv.setText("Get packetLen and startPosition");
+                        String s1 = selectFileActivity
+                                .getResources().getString(R.string.select_file_popup_tv_content);
+                        s1 = String.format(s1, "Get Length StartPosition");
+                        selectFileActivity.mLoadingTv.setText(s1);
                         break;
                     case GET_PAT_SDT_EIT:
-                        selectFileActivity.mLoadingTv.setText("Get PAT SDT EIT");
+                        String s2 = selectFileActivity
+                                .getResources().getString(R.string.select_file_popup_tv_content);
+                        s2 = String.format(s2, "Get PAT SDT EIT");
+                        selectFileActivity.mLoadingTv.setText(s2);
                         break;
                     case GET_PROGRAM_LIST:
+                        String s3 = selectFileActivity
+                                .getResources().getString(R.string.select_file_popup_tv_content);
+                        s3 = String.format(s3, "Get ProgramList");
+                        Toast.makeText(selectFileActivity, s3, Toast.LENGTH_SHORT).show();
                         break;
                     case GET_ALL_PMT:
-                        // 关闭等待框
+                        String s4 = selectFileActivity
+                                .getResources().getString(R.string.select_file_popup_tv_content);
+                        s4 = String.format(s4, "Get PMT");
+                        Toast.makeText(selectFileActivity, s4, Toast.LENGTH_SHORT).show();
+
                         selectFileActivity.mPopupWindow.dismiss();
                         // 进入 MainActivity
                         Intent intent = new Intent(selectFileActivity, MainActivity.class);

@@ -14,12 +14,18 @@ import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationSet;
+import android.view.animation.AnimationUtils;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.excellence.iptv.MainActivity;
 import com.excellence.iptv.PlayerActivity;
@@ -56,8 +62,6 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
 
     private LocalBroadcastManager mLocalBroadcastManager;
     private MyLocalReceiver mLocalReceiver;
-    private IntentFilter mIntentFilter;
-
 
     private List<Program> mProgramList = new ArrayList<>();
 
@@ -66,6 +70,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
     private List<Program> mSearchResultList = new ArrayList<>();
     private ProgramListAdapter mSearchResultListAdapter;
 
+    private LinearLayout mSearchHistoryLl;
     private FlowLayout mFlowLayout;
 
     @Nullable
@@ -80,8 +85,8 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         // 注册本地广播监听器
         initLocalBroadcast();
 
+        // 初始化控件和数据
         initView(mView);
-
         initHistoryTagData();
 
         // 初始化 MaterialEditText
@@ -95,10 +100,10 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
 
     private void initLocalBroadcast() {
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(mMainActivity);
-        mIntentFilter = new IntentFilter();
-        mIntentFilter.addAction(MyActoin.SEND_SEARCH_FRAGMENT_LOCAL_ACTION);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MyActoin.SEND_SEARCH_FRAGMENT_LOCAL_ACTION);
         mLocalReceiver = new MyLocalReceiver();
-        mLocalBroadcastManager.registerReceiver(mLocalReceiver, mIntentFilter);
+        mLocalBroadcastManager.registerReceiver(mLocalReceiver, intentFilter);
     }
 
     private void initView(View v) {
@@ -107,6 +112,14 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
 
         Button cancelBtn = v.findViewById(R.id.btn_cancel);
         cancelBtn.setOnClickListener(this);
+        AnimationSet animationSet = (AnimationSet) AnimationUtils
+                .loadAnimation(mMainActivity, R.anim.view_scale_in);
+        cancelBtn.startAnimation(animationSet);
+
+        mSearchHistoryLl = v.findViewById(R.id.ll_search_history);
+        AnimationSet animationSet1 = (AnimationSet) AnimationUtils
+                .loadAnimation(mMainActivity, R.anim.view_translate_in);
+        mSearchHistoryLl.startAnimation(animationSet1);
 
         mFlowLayout = v.findViewById(R.id.flow_layout_history_tag);
         mFlowLayout.setOnTagClickListener(new FlowLayout.OnTagClickListener() {
@@ -136,6 +149,18 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         mEditText.requestFocus();
         showKeyboard(mEditText);
 
+        mEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    // 添加历史标签
+                    mFlowLayout.addTag(mEditText.getText().toString());
+                    hideKeyboard(v);
+                }
+                return false;
+            }
+        });
+
         mEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -157,6 +182,9 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                 } else {
                     // 隐藏搜索结果列表
                     mRecyclerView.setVisibility(View.GONE);
+                    AnimationSet animationSet = (AnimationSet) AnimationUtils
+                            .loadAnimation(mMainActivity, R.anim.view_translate_in);
+                    mSearchHistoryLl.startAnimation(animationSet);
                 }
 
             }
@@ -208,6 +236,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
             case R.id.iv_search:
                 // 添加历史标签
                 mFlowLayout.addTag(mEditText.getText().toString());
+                hideKeyboard(v);
                 break;
 
             case R.id.btn_cancel:
@@ -249,8 +278,13 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                 if (mFlowLayout.getIsEditMode()) {
                     mFlowLayout.editMode(false);
                 } else {
-                    Intent intent0 = new Intent(MyActoin.SEARCH_FRAGMENT_BACK_LOCAL_ACTION);
-                    mLocalBroadcastManager.sendBroadcast(intent0);
+
+                    if (!TextUtils.isEmpty(mEditText.getText())) {
+                        mEditText.setText("");
+                    } else {
+                        Intent intent0 = new Intent(MyActoin.SEARCH_FRAGMENT_BACK_LOCAL_ACTION);
+                        mLocalBroadcastManager.sendBroadcast(intent0);
+                    }
                 }
             }
         }

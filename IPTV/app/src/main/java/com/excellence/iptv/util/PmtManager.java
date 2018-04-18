@@ -20,6 +20,7 @@ import static java.lang.Integer.toHexString;
 
 public class PmtManager {
     private static final String TAG = "PmtManager";
+    private static final boolean IS_LOG = false;
 
     private Pmt mPmt = null;
     private List<PmtStream> mPmtStreamList = new ArrayList<>();
@@ -41,18 +42,21 @@ public class PmtManager {
                 int sectionNumber = sectionData[6] & 0xFF;
                 mPmt.setSectionNumber(sectionNumber);
             }
-            Log.d(TAG, " ---------------------------------------------- ");
-            Log.d(TAG, " -- makePMT()");
-            Log.d(TAG, "tableId : 0x" + toHexString(mPmt.getTableId()));
-            Log.d(TAG, "sectionSyntaxIndicator : 0x" + toHexString(mPmt.getSectionSyntaxIndicator()));
-            Log.d(TAG, "sectionLength : 0x" + toHexString(mPmt.getSectionLength()));
-            Log.d(TAG, "programNumber : 0x" + toHexString(mPmt.getProgramNumber()));
-            Log.d(TAG, "versionNumber : 0x" + toHexString(mPmt.getVersionNumber()));
-            Log.d(TAG, "currentNextIndicator : 0x" + toHexString(mPmt.getCurrentNextIndicator()));
-            Log.d(TAG, "sectionNumber : 0x" + toHexString(mPmt.getSectionNumber()));
-            Log.d(TAG, "lastSectionNumber : 0x" + toHexString(mPmt.getLastSectionNumber()));
-            Log.d(TAG, "pcrPid : 0x" + toHexString(mPmt.getPcrPid()));
-            Log.d(TAG, "programInfoLength : 0x" + toHexString(mPmt.getProgramInfoLength()));
+            if (IS_LOG) {
+                Log.d(TAG, " ---------------------------------------------- ");
+                Log.d(TAG, " -- makePMT()");
+                Log.d(TAG, "tableId : 0x" + toHexString(mPmt.getTableId()));
+                Log.d(TAG, "sectionSyntaxIndicator : 0x" + toHexString(mPmt.getSectionSyntaxIndicator()));
+                Log.d(TAG, "sectionLength : 0x" + toHexString(mPmt.getSectionLength()));
+                Log.d(TAG, "programNumber : 0x" + toHexString(mPmt.getProgramNumber()));
+                Log.d(TAG, "versionNumber : 0x" + toHexString(mPmt.getVersionNumber()));
+                Log.d(TAG, "currentNextIndicator : 0x" + toHexString(mPmt.getCurrentNextIndicator()));
+                Log.d(TAG, "sectionNumber : 0x" + toHexString(mPmt.getSectionNumber()));
+                Log.d(TAG, "lastSectionNumber : 0x" + toHexString(mPmt.getLastSectionNumber()));
+                Log.d(TAG, "pcrPid : 0x" + toHexString(mPmt.getPcrPid()));
+                Log.d(TAG, "programInfoLength : 0x" + toHexString(mPmt.getProgramInfoLength()));
+            }
+
 
             /*
             * to programInfoLength : 12 byte
@@ -67,15 +71,17 @@ public class PmtManager {
             int theEffectiveLength = sectionSize - (16 + mPmt.getProgramInfoLength());
             int pos = 12 + mPmt.getProgramInfoLength();
             for (int n = 0; n < theEffectiveLength; ) {
-                Log.d(TAG, " -- ");
                 int streamType = sectionData[pos + n] & 0xFF;
-                Log.d(TAG, "streamType : 0x" + toHexString(streamType));
                 int elementaryPid = (((sectionData[pos + 1 + n] & 0x1F) << 8) |
                         (sectionData[pos + 2 + n] & 0xFF)) & 0x1FFF;
-                Log.d(TAG, "elementaryPid : 0x" + toHexString(elementaryPid));
                 int esInfoLength = (((sectionData[pos + 3 + n] & 0xF) << 8) |
                         (sectionData[pos + 4 + n] & 0xFF)) & 0xFFF;
-                Log.d(TAG, "esInfoLength : 0x" + toHexString(esInfoLength));
+                if (IS_LOG) {
+                    Log.d(TAG, " -- ");
+                    Log.d(TAG, "streamType : 0x" + toHexString(streamType));
+                    Log.d(TAG, "elementaryPid : 0x" + toHexString(elementaryPid));
+                    Log.d(TAG, "esInfoLength : 0x" + toHexString(esInfoLength));
+                }
 
                 PmtStream pmtStream = new PmtStream(streamType, elementaryPid, esInfoLength);
                 mPmtStreamList.add(pmtStream);

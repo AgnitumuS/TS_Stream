@@ -109,7 +109,7 @@ public class TsThread extends Thread {
             searchArray[2][0] = EIT_PID;
             searchArray[2][1] = EIT_TABLE_ID;
             // 开始匹配
-            int err = mPacketManager.matchData(mInputFilePath, searchArray);
+            int err = mPacketManager.matchSection(mInputFilePath, searchArray);
             if (err == -1) {
                 Log.e(TAG, "Failed to get PAT SDT EIT");
                 return;
@@ -139,7 +139,7 @@ public class TsThread extends Thread {
                 searchArray[i][0] = patProgramList.get(i).getProgramMapPid();
                 searchArray[i][1] = PMT_TABLE_ID;
             }
-            int err = mPacketManager.matchData(mInputFilePath, searchArray);
+            int err = mPacketManager.matchSection(mInputFilePath, searchArray);
             if (err == -1) {
                 Log.e(TAG, "Failed to get all PMT");
             } else {

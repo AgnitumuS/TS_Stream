@@ -20,6 +20,7 @@ import static java.lang.Integer.toHexString;
 
 public class PatManager {
     private static final String TAG = "PatManager";
+    private static final boolean IS_LOG = false;
 
     private Pat mPat = null;
     private List<PatProgram> mPatProgramList = new ArrayList<>();
@@ -41,16 +42,18 @@ public class PatManager {
                 int sectionNumber = sectionData[6] & 0xFF;
                 mPat.setSectionNumber(sectionNumber);
             }
-            Log.d(TAG, " ---------------------------------------------- ");
-            Log.d(TAG, " -- makePAT()");
-            Log.d(TAG, "tableId : 0x" + toHexString(mPat.getTableId()));
-            Log.d(TAG, "sectionSyntaxIndicator : 0x" + toHexString(mPat.getSectionSyntaxIndicator()));
-            Log.d(TAG, "sectionLength : 0x" + toHexString(mPat.getSectionLength()));
-            Log.d(TAG, "transportStreamId : 0x" + toHexString(mPat.getTransportStreamId()));
-            Log.d(TAG, "versionNumber : 0x" + toHexString(mPat.getVersionNumber()));
-            Log.d(TAG, "currentNextIndicator : 0x" + toHexString(mPat.getCurrentNextIndicator()));
-            Log.d(TAG, "sectionNumber : 0x" + toHexString(mPat.getSectionNumber()));
-            Log.d(TAG, "lastSectionNumber : 0x" + toHexString(mPat.getLastSectionNumber()));
+            if (IS_LOG) {
+                Log.d(TAG, " ---------------------------------------------- ");
+                Log.d(TAG, " -- makePAT()");
+                Log.d(TAG, "tableId : 0x" + toHexString(mPat.getTableId()));
+                Log.d(TAG, "sectionSyntaxIndicator : 0x" + toHexString(mPat.getSectionSyntaxIndicator()));
+                Log.d(TAG, "sectionLength : 0x" + toHexString(mPat.getSectionLength()));
+                Log.d(TAG, "transportStreamId : 0x" + toHexString(mPat.getTransportStreamId()));
+                Log.d(TAG, "versionNumber : 0x" + toHexString(mPat.getVersionNumber()));
+                Log.d(TAG, "currentNextIndicator : 0x" + toHexString(mPat.getCurrentNextIndicator()));
+                Log.d(TAG, "sectionNumber : 0x" + toHexString(mPat.getSectionNumber()));
+                Log.d(TAG, "lastSectionNumber : 0x" + toHexString(mPat.getLastSectionNumber()));
+            }
 
             /*
             * to lastSectionNumber : 8 byte
@@ -62,19 +65,25 @@ public class PatManager {
             int sectionSize = sectionData.length;
             int theEffectiveLength = sectionSize - 12;
             for (int j = 0; j < theEffectiveLength; j += 4) {
-                Log.d(TAG, " -- ");
                 int programNumber = (((sectionData[8 + j] & 0xFF) << 8) | (sectionData[9 + j] & 0xFF)) & 0xFFFF;
-                Log.d(TAG, "programNumber : 0x" + toHexString(programNumber));
+                if (IS_LOG) {
+                    Log.d(TAG, " -- ");
+                    Log.d(TAG, "programNumber : 0x" + toHexString(programNumber));
+                }
 
                 if (programNumber == 0x00) {
                     int networkPid = (((sectionData[10 + j] & 0x1F) << 8) | (sectionData[11 + j] & 0xFF)) & 0x1FFF;
-                    Log.d(TAG, "networkPid : 0x" + toHexString(networkPid));
+                    if (IS_LOG) {
+                        Log.d(TAG, "networkPid : 0x" + toHexString(networkPid));
+                    }
 
                     mPat.setNetworkPid(networkPid);
 
                 } else {
                     int programMapPid = (((sectionData[10 + j] & 0x1F) << 8) | (sectionData[11 + j] & 0xFF)) & 0x1FFF;
-                    Log.d(TAG, "programMapPid : 0x" + toHexString(programMapPid));
+                    if (IS_LOG) {
+                        Log.d(TAG, "programMapPid : 0x" + toHexString(programMapPid));
+                    }
 
                     PatProgram patProgram = new PatProgram(programNumber, programMapPid);
                     mPatProgramList.add(patProgram);

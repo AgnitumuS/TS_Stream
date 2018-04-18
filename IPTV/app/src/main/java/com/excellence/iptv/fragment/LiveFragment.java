@@ -9,6 +9,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationSet;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
@@ -17,7 +19,6 @@ import com.excellence.iptv.PlayerActivity;
 import com.excellence.iptv.R;
 import com.excellence.iptv.adapter.ProgramListAdapter;
 import com.excellence.iptv.bean.Program;
-import com.excellence.iptv.bean.tables.Pmt;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +63,9 @@ public class LiveFragment extends Fragment implements View.OnClickListener {
 
         ImageView favouriteIv = v.findViewById(R.id.iv_favorite);
         favouriteIv.setOnClickListener(this);
+        AnimationSet animationSet = (AnimationSet) AnimationUtils
+                .loadAnimation(mMainActivity, R.anim.view_scale_in);
+        favouriteIv.startAnimation(animationSet);
     }
 
     private void initRecyclerView(View v) {
@@ -70,6 +74,10 @@ public class LiveFragment extends Fragment implements View.OnClickListener {
         recyclerView.setLayoutManager(layoutManager);
         mProgramListAdapter = new ProgramListAdapter(mMainActivity, mProgramList);
         recyclerView.setAdapter(mProgramListAdapter);
+
+        AnimationSet animationSet = (AnimationSet) AnimationUtils
+                .loadAnimation(mMainActivity, R.anim.view_translate_in);
+        recyclerView.startAnimation(animationSet);
 
         mProgramListAdapter.setOnItemClickListener(new ProgramListAdapter.OnItemClickListener() {
             @Override

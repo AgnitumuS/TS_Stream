@@ -22,6 +22,7 @@ import static java.lang.Integer.toHexString;
 
 public class EitManager {
     private static final String TAG = "EitManager";
+    private static final boolean IS_LOG = false;
 
     private Eit mEit = null;
     private List<EitEvent> mEitEventList = new ArrayList<>();
@@ -47,25 +48,27 @@ public class EitManager {
                 mEit.setSectionNumber(sectionNumber);
                 mEit.setVersionNumber(versionNumber);
             }
-            Log.d(TAG, " ---------------------------------------------- ");
-            Log.d(TAG, " -- makeEit()");
-            Log.d(TAG, "tableId : 0x" + toHexString(mEit.getTableId()));
-            Log.d(TAG, "sectionSyntaxIndicator : 0x" + toHexString(mEit.getSectionSyntaxIndicator()));
-            Log.d(TAG, "sectionLength : 0x" + toHexString(mEit.getSectionLength()));
-            Log.d(TAG, "serviceId : 0x" + toHexString(mEit.getServiceId()));
-            Log.d(TAG, "versionNumber : 0x" + toHexString(mEit.getVersionNumber()));
-            Log.d(TAG, "currentNextIndicator : 0x" + toHexString(mEit.getCurrentNextIndicator()));
-            Log.d(TAG, "sectionNumber : 0x" + toHexString(mEit.getSectionNumber()));
-            Log.d(TAG, "lastSectionNumber : 0x" + toHexString(mEit.getLastSectionNumber()));
-            Log.d(TAG, "transportStreamId : 0x" + toHexString(mEit.getTransportStreamId()));
-            Log.d(TAG, "originalNetworkId : 0x" + toHexString(mEit.getOriginalNetworkId()));
-            Log.d(TAG, "segmentLastSectionNumber : 0x" + toHexString(mEit.getSegmentLastSectionNumber()));
-            Log.d(TAG, "lastTableId : 0x" + toHexString(mEit.getLastTableId()));
+            if (IS_LOG) {
+                Log.d(TAG, " ---------------------------------------------- ");
+                Log.d(TAG, " -- makeEit()");
+                Log.d(TAG, "tableId : 0x" + toHexString(mEit.getTableId()));
+                Log.d(TAG, "sectionSyntaxIndicator : 0x" + toHexString(mEit.getSectionSyntaxIndicator()));
+                Log.d(TAG, "sectionLength : 0x" + toHexString(mEit.getSectionLength()));
+                Log.d(TAG, "serviceId : 0x" + toHexString(mEit.getServiceId()));
+                Log.d(TAG, "versionNumber : 0x" + toHexString(mEit.getVersionNumber()));
+                Log.d(TAG, "currentNextIndicator : 0x" + toHexString(mEit.getCurrentNextIndicator()));
+                Log.d(TAG, "sectionNumber : 0x" + toHexString(mEit.getSectionNumber()));
+                Log.d(TAG, "lastSectionNumber : 0x" + toHexString(mEit.getLastSectionNumber()));
+                Log.d(TAG, "transportStreamId : 0x" + toHexString(mEit.getTransportStreamId()));
+                Log.d(TAG, "originalNetworkId : 0x" + toHexString(mEit.getOriginalNetworkId()));
+                Log.d(TAG, "segmentLastSectionNumber : 0x" + toHexString(mEit.getSegmentLastSectionNumber()));
+                Log.d(TAG, "lastTableId : 0x" + toHexString(mEit.getLastTableId()));
+            }
+
 
             int sectionSize = sectionData.length;
             int theEffectiveLength = sectionSize - 14 - 4;
             for (int j = 0; j < theEffectiveLength; ) {
-                Log.d(TAG, " -- ");
                 int serviceId = mEit.getServiceId();
                 int eventId = (((sectionData[14 + j] & 0xFF) << 8) | (sectionData[15 + j] & 0xFF)) & 0xFFFF;
                 int startTimeMjd = (((sectionData[16 + j] & 0xFF) << 8) | (sectionData[17 + j] & 0xFF)) & 0xFFFF;
@@ -87,20 +90,21 @@ public class EitManager {
                 for (int n = 0; n < eventNameLength; n++) {
                     strBytes[n] = sectionData[32 + j + n];
                 }
-                String eventName = new StringUtil(strBytes).makeString();
+                String eventName = new StringEncodingUtil(strBytes).makeString();
 
+                if (IS_LOG) {
+                    Log.d(TAG, " -- ");
+                    Log.d(TAG, "serviceId : 0x" + toHexString(serviceId));
+                    Log.d(TAG, "eventId : 0x" + toHexString(eventId));
+                    Log.d(TAG, "startTimeMjd : 0x" + toHexString(startTimeMjd));
+                    Log.d(TAG, "runningStatus : 0x" + toHexString(runningStatus));
+                    Log.d(TAG, "freeCaMode : 0x" + toHexString(freeCaMode));
+                    Log.d(TAG, "descriptorsLoopLength : 0x" + toHexString(descriptorsLoopLength));
+                    Log.d(TAG, "descriptor_length : " + descriptor_length);
+                    Log.d(TAG, "eventNameLength : " + eventNameLength);
+                    Log.d(TAG, "eventName : " + eventName);
+                }
 
-                Log.d(TAG, "serviceId : 0x" + toHexString(serviceId));
-                Log.d(TAG, "eventId : 0x" + toHexString(eventId));
-                Log.d(TAG, "startTimeMjd : 0x" + toHexString(startTimeMjd));
-//                Log.d(TAG, "startTimeBcd : 0x" + toHexString(startTimeBcd));
-//                Log.d(TAG, "duration : 0x" + toHexString(duration));
-                Log.d(TAG, "runningStatus : 0x" + toHexString(runningStatus));
-                Log.d(TAG, "freeCaMode : 0x" + toHexString(freeCaMode));
-                Log.d(TAG, "descriptorsLoopLength : 0x" + toHexString(descriptorsLoopLength));
-                Log.d(TAG, "descriptor_length : " + descriptor_length);
-                Log.d(TAG, "eventNameLength : " + eventNameLength);
-                Log.d(TAG, "eventName : " + eventName);
 
                 EitEvent eitEvent = new EitEvent(serviceId, eventId, startTimeMjd, startTimeBcd, duration,
                         runningStatus, freeCaMode, descriptorsLoopLength,
