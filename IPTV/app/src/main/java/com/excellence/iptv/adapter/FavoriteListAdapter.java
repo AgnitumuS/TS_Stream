@@ -10,8 +10,10 @@ import android.widget.TextView;
 
 import com.excellence.iptv.R;
 import com.excellence.iptv.bean.Program;
+import com.excellence.iptv.view.FavImageView;
 
 import java.util.List;
+import java.util.Random;
 
 /**
  * FavoriteListAdapter
@@ -20,7 +22,7 @@ import java.util.List;
  * @date 2018/4/4
  */
 
-public class FavoriteListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class FavoriteListAdapter extends RecyclerView.Adapter<FavoriteListAdapter.MyViewHolder> {
     private static final String TAG = "FavoriteListAdapter";
 
     private Context mContext;
@@ -30,12 +32,11 @@ public class FavoriteListAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     private OnItemClickListener mOnItemClickListener;
 
-    private class MyViewHolder extends RecyclerView.ViewHolder {
+    static class MyViewHolder extends RecyclerView.ViewHolder {
         View itemView;
-        ImageView programPicIv;
+        FavImageView programPicIv;
         TextView programInfoTv;
         ImageView deleteIconIv;
-        ImageView editModeIv;
 
         public MyViewHolder(View v) {
             super(v);
@@ -43,7 +44,6 @@ public class FavoriteListAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             programPicIv = v.findViewById(R.id.iv_favorite_item_program_pic);
             programInfoTv = v.findViewById(R.id.tv_favorite_item_program_info);
             deleteIconIv = v.findViewById(R.id.iv_favorite_item_delete_icon);
-            editModeIv = v.findViewById(R.id.iv_favorite_item_edit_mode);
         }
     }
 
@@ -64,35 +64,15 @@ public class FavoriteListAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     }
 
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(mContext)
                 .inflate(R.layout.favorite_item, parent, false);
-        MyViewHolder holder = new MyViewHolder(view);
-        return holder;
-    }
+        final MyViewHolder holder = new MyViewHolder(view);
 
-    @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
-        final MyViewHolder myViewHolder = (MyViewHolder) holder;
-
-        myViewHolder.programPicIv.setImageResource(selectImage(position));
-
-        String strResult = mContext.getResources().getString(R.string.favorite_item_tv_program_info_result);
-        strResult = String.format(strResult,
-                mList.get(position).getProgramNumber(), mList.get(position).getProgramName());
-        myViewHolder.programInfoTv.setText(strResult);
-
-        // 编辑模式图标
-        if (isEditMode) {
-            myViewHolder.deleteIconIv.setVisibility(View.VISIBLE);
-            myViewHolder.editModeIv.setVisibility(View.VISIBLE);
-        } else {
-            myViewHolder.deleteIconIv.setVisibility(View.INVISIBLE);
-            myViewHolder.editModeIv.setVisibility(View.INVISIBLE);
-        }
-        myViewHolder.deleteIconIv.setOnClickListener(new View.OnClickListener() {
+        holder.deleteIconIv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                int position = holder.getAdapterPosition();
                 mList.get(position).setIsFavorite(false);
                 mList.remove(position);
                 notifyDataSetChanged();
@@ -102,13 +82,50 @@ public class FavoriteListAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             }
         });
 
-        myViewHolder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mOnItemClickListener != null && !isEditMode) {
+                    int position = holder.getAdapterPosition();
+                    mOnItemClickListener.onItemClick(v, position);
+                }
+            }
+        });
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                editMode(true);
+                if (!isEditMode) {
+                    editMode(true);
+                }
                 return true;
             }
         });
+
+        return holder;
+    }
+
+    @Override
+    public void onBindViewHolder(MyViewHolder holder, int position) {
+
+        // 显示节目图片
+        int imageNum = mList.get(position).getProgramNumber() % 9;
+        holder.programPicIv.setImageResource(R.drawable.bg01 + imageNum);
+
+        // 显示节目信息
+        String strResult = mContext.getResources().getString(R.string.favorite_item_tv_program_info_result);
+        strResult = String.format(strResult,
+                mList.get(position).getProgramNumber(), mList.get(position).getProgramName());
+        holder.programInfoTv.setText(strResult);
+
+        // 是否为编辑模式状态
+        if (isEditMode) {
+            holder.programPicIv.setEditMode(true);
+            holder.deleteIconIv.setVisibility(View.VISIBLE);
+        } else {
+            holder.programPicIv.setEditMode(false);
+            holder.deleteIconIv.setVisibility(View.INVISIBLE);
+        }
     }
 
     public void editMode(boolean isRight) {
@@ -120,41 +137,6 @@ public class FavoriteListAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         return isEditMode;
     }
 
-    private int selectImage(int position){
-        int imageId = R.drawable.bg01;
-        switch (position % 9){
-            case 0:
-                imageId = R.drawable.bg01;
-                break;
-            case 1:
-                imageId = R.drawable.bg02;
-                break;
-            case 2:
-                imageId = R.drawable.bg03;
-                break;
-            case 3:
-                imageId = R.drawable.bg04;
-                break;
-            case 4:
-                imageId = R.drawable.bg05;
-                break;
-            case 5:
-                imageId = R.drawable.bg06;
-                break;
-            case 6:
-                imageId = R.drawable.bg07;
-                break;
-            case 7:
-                imageId = R.drawable.bg08;
-                break;
-            case 8:
-                imageId = R.drawable.bg09;
-                break;
-            default:
-                break;
-        }
-        return imageId;
-    }
 
     public interface OnItemClickListener {
         /**

@@ -16,6 +16,8 @@ import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.animation.AnimationSet;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
@@ -205,6 +207,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Fragment getFragments(int to) {
         Fragment fragment;
+
+        AnimationSet animationSet = (AnimationSet) AnimationUtils
+                .loadAnimation(this, R.anim.fragment_alpha_out);
+
         switch (to) {
             case LIVE_FRAGMENT:
                 mFragmentPos = LIVE_FRAGMENT;
@@ -219,12 +225,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case SEARCH_FRAGMENT:
                 mFragmentPos = SEARCH_FRAGMENT;
                 fragment = new SearchFragment();
+                mNavigationLl.startAnimation(animationSet);
                 mNavigationLl.setVisibility(View.GONE);
                 break;
 
             case FAVORITE_FRAGMENT:
                 mFragmentPos = FAVORITE_FRAGMENT;
                 fragment = new FavoriteFragment();
+                mNavigationLl.startAnimation(animationSet);
                 mNavigationLl.setVisibility(View.GONE);
                 break;
 

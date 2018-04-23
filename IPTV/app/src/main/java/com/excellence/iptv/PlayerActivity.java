@@ -18,6 +18,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.excellence.iptv.bean.Program;
@@ -53,10 +54,11 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     private LinearLayout mTitleBarLl;
     private LinearLayout mInfoBarLl;
 
+    private RelativeLayout mPlayerStatusRl;
     private ImageView mPlayerStatusIv;
 
     private boolean mBarIsShow = true;
-    private boolean mIsPlaying = true;
+    private boolean isPlaying = true;
 
     private MyHandler mHandler = new MyHandler(this);
 
@@ -94,8 +96,9 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
     private void initView() {
         mTitleBarLl = findViewById(R.id.ll_title_bar);
-        ImageView backIv = findViewById(R.id.iv_player_back);
-        backIv.setOnClickListener(this);
+        RelativeLayout backRl = findViewById(R.id.rl_player_back);
+        backRl.setOnClickListener(this);
+
         RobotoRegularTextView titleTv = findViewById(R.id.tv_player_title);
         String str = getResources().getString(R.string.player_tv_title_bar_result);
         str = String.format(str, mProgram.getProgramNumber(), mProgram.getProgramName());
@@ -103,7 +106,9 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
         mInfoBarLl = findViewById(R.id.ll_info_bar);
         mPlayerStatusIv = findViewById(R.id.iv_player_status);
-        mPlayerStatusIv.setOnClickListener(this);
+        mPlayerStatusRl = findViewById(R.id.rl_player_status);
+        mPlayerStatusRl.setOnClickListener(this);
+
         RobotoRegularTextView eitInfoTv = findViewById(R.id.tv_player_eit_info);
         String startTime = mProgram.getStartTime();
         if (!startTime.equals(NULL_STRING)) {
@@ -131,12 +136,13 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                     mHandler.sendEmptyMessageDelayed(MESSAGE_SWITCH_BAR, 5000);
                 }
                 break;
-            case R.id.iv_player_status:
-                mPlayerStatusIv.setSelected(mIsPlaying);
-                mIsPlaying = !mIsPlaying;
+            case R.id.rl_player_status:
+                mPlayerStatusIv.setSelected(isPlaying);
+                isPlaying = !isPlaying;
                 showPopupWindow();
+                mHandler.removeMessages(MESSAGE_SWITCH_BAR);
                 break;
-            case R.id.iv_player_back:
+            case R.id.rl_player_back:
                 finish();
                 break;
             default:

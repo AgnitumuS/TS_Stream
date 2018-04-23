@@ -37,5 +37,8 @@
     <color name="search_item_bg_color">#e6e6e6</color>
 
     <!-- favorite item -->
-    <color name="favorite_item_edit_mode_iv_color">#bb000000</color>
+    <color name="favorite_item_edit_mode_iv_color">#80ffffff</color>
+
+    <!-- player popup window -->
+    <color name="player_popup_window_bg_color">#b2000000</color>
 </resources>

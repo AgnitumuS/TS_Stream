@@ -29,6 +29,7 @@ import static java.lang.Integer.toHexString;
 
 public class ProgramManager {
     private static final String TAG = "ProgramManager";
+    private static final boolean IS_LOG = false;
 
     private List<Program> mProgramList = new ArrayList<>();
 
@@ -37,8 +38,10 @@ public class ProgramManager {
     }
 
     public List<Program> makeProgramList(Pat pat, Sdt sdt, Eit eit) {
-        Log.d(TAG, " ---------------------------------------------- ");
-        Log.d(TAG, " -- makeProgramList()");
+        if (IS_LOG) {
+            Log.d(TAG, " ---------------------------------------------- ");
+            Log.d(TAG, " -- makeProgramList()");
+        }
         List<PatProgram> patProgramList = pat.getPatProgramList();
         List<SdtService> sdtServiceList = sdt.getSdtServiceList();
         List<EitEvent> eitEventList = eit.getEitEventList();
@@ -95,14 +98,17 @@ public class ProgramManager {
                 eventName = eitEventList.get(position).getEventName();
             }
 
-            Log.d(TAG, " -- ");
-            Log.d(TAG, "programNumber : 0x" + toHexString(programNumber));
-            Log.d(TAG, "programMapPid : 0x" + toHexString(programMapPid));
-            Log.d(TAG, "programName : " + programName);
-            Log.d(TAG, "startTime : " + startTime);
-            Log.d(TAG, "duration : " + duration);
-            Log.d(TAG, "endTime : " + endTime);
-            Log.d(TAG, "eventName : " + eventName);
+            if (IS_LOG) {
+                Log.d(TAG, " -- ");
+                Log.d(TAG, "programNumber : 0x" + toHexString(programNumber));
+                Log.d(TAG, "programMapPid : 0x" + toHexString(programMapPid));
+                Log.d(TAG, "programName : " + programName);
+                Log.d(TAG, "startTime : " + startTime);
+                Log.d(TAG, "duration : " + duration);
+                Log.d(TAG, "endTime : " + endTime);
+                Log.d(TAG, "eventName : " + eventName);
+            }
+
             Program program = new Program(programNumber, programMapPid, programName,
                     startTime, duration, endTime, eventName);
             mProgramList.add(program);

@@ -3,7 +3,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/favorite_item_edit_mode_iv_color">
+    android:background="@color/player_popup_window_bg_color">
 
     <TextView
         android:id="@+id/tv_pmt_id"

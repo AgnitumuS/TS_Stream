@@ -21,6 +21,7 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
@@ -61,6 +62,7 @@ public class SelectFileActivity extends AppCompatActivity {
     public static final int GET_PAT_SDT_EIT = 2;
     public static final int GET_PROGRAM_LIST = 3;
     public static final int GET_ALL_PMT = 4;
+    public static final int TS_THREAD_IS_OVER = 5;
     public static final String KEY_TS_DATA = "TsData";
 
     private MyHandler mHandler;
@@ -199,8 +201,8 @@ public class SelectFileActivity extends AppCompatActivity {
         ImageView loadingAnimIv = view.findViewById(R.id.iv_loading_animation);
         Animation rotate = AnimationUtils.loadAnimation(
                 this, R.anim.select_file_popup_window_loading_rotate);
-        LinearInterpolator lin = new LinearInterpolator();
-        rotate.setInterpolator(lin);
+        AccelerateDecelerateInterpolator interpolator = new AccelerateDecelerateInterpolator();
+        rotate.setInterpolator(interpolator);
         loadingAnimIv.setAnimation(rotate);
         loadingAnimIv.startAnimation(rotate);
 
@@ -271,18 +273,24 @@ public class SelectFileActivity extends AppCompatActivity {
                         Toast.makeText(selectFileActivity, s3, Toast.LENGTH_SHORT).show();
                         break;
                     case GET_ALL_PMT:
+                        selectFileActivity.mPopupWindow.dismiss();
                         String s4 = selectFileActivity
                                 .getResources().getString(R.string.select_file_popup_tv_content);
                         s4 = String.format(s4, "Get PMT");
                         Toast.makeText(selectFileActivity, s4, Toast.LENGTH_SHORT).show();
 
-                        selectFileActivity.mPopupWindow.dismiss();
                         // 进入 MainActivity
                         Intent intent = new Intent(selectFileActivity, MainActivity.class);
                         intent.putExtra(KEY_TS_DATA, selectFileActivity.mTs);
                         selectFileActivity.startActivity(intent);
                         break;
-
+                    case TS_THREAD_IS_OVER:
+                        selectFileActivity.mPopupWindow.dismiss();
+                        String s5 = selectFileActivity
+                                .getResources().getString(R.string.select_file_popup_tv_content);
+                        s5 = String.format(s5, "TsThread is over");
+                        Toast.makeText(selectFileActivity, s5, Toast.LENGTH_SHORT).show();
+                        break;
                     default:
                         break;
                 }

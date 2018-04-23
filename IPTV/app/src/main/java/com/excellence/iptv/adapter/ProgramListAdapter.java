@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import com.excellence.iptv.R;
 import com.excellence.iptv.bean.Program;
@@ -21,7 +22,7 @@ import java.util.List;
  * @date 2018/4/4
  */
 
-public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class ProgramListAdapter extends RecyclerView.Adapter<ProgramListAdapter.MyViewHolder> {
     private static final String TAG = "ProgramListAdapter";
     private static final String NULL_STRING = "null";
 
@@ -30,11 +31,12 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     private OnItemClickListener mOnItemClickListener;
 
-    private class MyViewHolder extends RecyclerView.ViewHolder {
+    static class MyViewHolder extends RecyclerView.ViewHolder {
         View itemView;
         RobotoMediumTextView programNumTv;
         RobotoMediumTextView programNameTv;
         RobotoRegularTextView programEitInfoTv;
+        RelativeLayout addFavRl;
         ImageView addFavIv;
 
         public MyViewHolder(View v) {
@@ -43,6 +45,7 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             programNumTv = v.findViewById(R.id.tv_program_num);
             programNameTv = v.findViewById(R.id.tv_program_name);
             programEitInfoTv = v.findViewById(R.id.tv_program_eit_info);
+            addFavRl = v.findViewById(R.id.rl_add_fav);
             addFavIv = v.findViewById(R.id.iv_add_fav);
         }
     }
@@ -59,24 +62,53 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(mContext)
                 .inflate(R.layout.live_item, parent, false);
-        MyViewHolder holder = new MyViewHolder(view);
+        final MyViewHolder holder = new MyViewHolder(view);
+
+        // 添加收藏
+        holder.addFavRl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int position = holder.getAdapterPosition();
+                if (holder.addFavIv.isSelected()) {
+                    mList.get(position).setIsFavorite(false);
+                    holder.addFavIv.setSelected(false);
+                } else {
+                    mList.get(position).setIsFavorite(true);
+                    holder.addFavIv.setSelected(true);
+                }
+            }
+        });
+
+        // item 点击事件
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mOnItemClickListener != null) {
+                    int position = holder.getAdapterPosition();
+                    mOnItemClickListener.onItemClick(v, position);
+                }
+            }
+        });
+
         return holder;
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
-        MyViewHolder myViewHolder = (MyViewHolder) holder;
+    public void onBindViewHolder(MyViewHolder holder, int position) {
+        // 显示 programNum
         String strResult = mContext.getResources().getString(R.string.live_item_tv_program_num_result);
         strResult = String.format(strResult, mList.get(position).getProgramNumber());
-        myViewHolder.programNumTv.setText(strResult);
+        holder.programNumTv.setText(strResult);
 
+        // 显示 programName
         strResult = mContext.getResources().getString(R.string.live_item_tv_program_name_result);
         strResult = String.format(strResult, mList.get(position).getProgramName());
-        myViewHolder.programNameTv.setText(strResult);
+        holder.programNameTv.setText(strResult);
 
+        // 显示 startTime endTime eventName
         String startTime = mList.get(position).getStartTime();
         if (!startTime.equals(NULL_STRING)) {
             startTime = startTime.substring(0, 5);
@@ -85,41 +117,20 @@ public class ProgramListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             String eventName = mList.get(position).getEventName();
             strResult = mContext.getResources().getString(R.string.live_item_tv_eit_info_result);
             strResult = String.format(strResult, startTime, endTime, eventName);
-            myViewHolder.programEitInfoTv.setText(strResult);
+            holder.programEitInfoTv.setText(strResult);
         } else {
             strResult = mContext.getResources().getString(R.string.live_item_tv_eit_info);
-            myViewHolder.programEitInfoTv.setText(strResult);
+            holder.programEitInfoTv.setText(strResult);
         }
 
-
+        // 更新 Favorite 图标
         boolean isFavorite = mList.get(position).getIsFavorite();
         if (isFavorite) {
-            myViewHolder.addFavIv.setSelected(true);
+            holder.addFavIv.setSelected(true);
         } else {
-            myViewHolder.addFavIv.setSelected(false);
+            holder.addFavIv.setSelected(false);
         }
-        myViewHolder.addFavIv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (v.isSelected()) {
-                    mList.get(position).setIsFavorite(false);
-                    v.setSelected(false);
-                } else {
-                    mList.get(position).setIsFavorite(true);
-                    v.setSelected(true);
-                }
 
-            }
-        });
-
-        if (mOnItemClickListener != null) {
-            myViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mOnItemClickListener.onItemClick(v, position);
-                }
-            });
-        }
     }
 
     @Override

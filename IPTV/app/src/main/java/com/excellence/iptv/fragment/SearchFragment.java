@@ -147,15 +147,19 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
     private void initMaterialEditText(View v) {
         mEditText = v.findViewById(R.id.et_search);
         mEditText.requestFocus();
-        showKeyboard(mEditText);
+        showKeyboard(true);
 
         mEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                     // 添加历史标签
-                    mFlowLayout.addTag(mEditText.getText().toString());
-                    hideKeyboard(v);
+                    String content = mEditText.getText().toString();
+                    content = formatString(content);
+                    if (!TextUtils.isEmpty(content)) {
+                        mFlowLayout.addTag(content);
+                    }
+                    showKeyboard(false);
                 }
                 return false;
             }
@@ -191,15 +195,26 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         });
     }
 
-    private void searchItem(String searchName) {
+    private void searchItem(String str) {
+        String searchStr = formatString(str);
+
         for (int i = 0; i < mProgramList.size(); i++) {
-            int index = mProgramList.get(i).getProgramName().indexOf(searchName);
-            String programStr = String.valueOf(mProgramList.get(i).getProgramNumber());
-            int index2 = programStr.indexOf(searchName);
+            String programName = mProgramList.get(i).getProgramName();
+            programName = formatString(programName);
+            int index = programName.indexOf(searchStr);
+
+            String programNum = String.valueOf(mProgramList.get(i).getProgramNumber());
+            int index2 = programNum.indexOf(searchStr);
             if (index != -1 || index2 != -1) {
                 mSearchResultList.add(mProgramList.get(i));
             }
         }
+    }
+
+    private String formatString(String inputStr) {
+        String str = inputStr.replaceAll(" ", "");
+        str = str.toLowerCase();
+        return str;
     }
 
     private void initSearchResultRv(View v) {
@@ -225,7 +240,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                 // 清空搜索框
                 mEditText.setText("");
                 // 隐藏键盘
-                hideKeyboard(view);
+                showKeyboard(false);
             }
         });
     }
@@ -235,8 +250,12 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         switch (v.getId()) {
             case R.id.iv_search:
                 // 添加历史标签
-                mFlowLayout.addTag(mEditText.getText().toString());
-                hideKeyboard(v);
+                String content = mEditText.getText().toString();
+                content = formatString(content);
+                if (!TextUtils.isEmpty(content)) {
+                    mFlowLayout.addTag(content);
+                }
+                showKeyboard(false);
                 break;
 
             case R.id.btn_cancel:
@@ -255,17 +274,17 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    private void showKeyboard(View v) {
+    private void showKeyboard(boolean isShow) {
         InputMethodManager imm = (InputMethodManager)
                 mMainActivity.getSystemService(INPUT_METHOD_SERVICE);
-        imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS);
+        if (isShow) {
+            imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS);
+        } else {
+            imm.hideSoftInputFromWindow(mView.getWindowToken(), 0);
+        }
+
     }
 
-    private void hideKeyboard(View v) {
-        InputMethodManager imm = (InputMethodManager)
-                mMainActivity.getSystemService(INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-    }
 
     /**
      * 监听本地广播

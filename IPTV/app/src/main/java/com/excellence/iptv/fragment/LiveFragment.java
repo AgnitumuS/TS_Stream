@@ -63,6 +63,7 @@ public class LiveFragment extends Fragment implements View.OnClickListener {
 
         ImageView favouriteIv = v.findViewById(R.id.iv_favorite);
         favouriteIv.setOnClickListener(this);
+
         AnimationSet animationSet = (AnimationSet) AnimationUtils
                 .loadAnimation(mMainActivity, R.anim.view_scale_in);
         favouriteIv.startAnimation(animationSet);

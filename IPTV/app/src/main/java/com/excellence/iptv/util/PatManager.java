@@ -37,22 +37,29 @@ public class PatManager {
             byte[] sectionData = section.getSectionData();
 
             if (mPat == null) {
-                mPat = new Pat(sectionData);
-            } else {
-                int sectionNumber = sectionData[6] & 0xFF;
-                mPat.setSectionNumber(sectionNumber);
+                mPat = new Pat();
             }
+
             if (IS_LOG) {
+                int tableId = sectionData[0] & 0xFF;
+                int sectionSyntaxIndicator = (sectionData[1] >> 7) & 0x1;
+                int sectionLength = (((sectionData[1] & 0xF) << 8) | (sectionData[2] & 0xFF)) & 0xFFF;
+                int transportStreamId = ((sectionData[3] & 0xFF) | (sectionData[4] & 0xFF)) & 0xFFFF;
+                int versionNumber = (sectionData[5] >> 1) & 0x1F;
+                int currentNextIndicator = sectionData[5] & 0x1;
+                int sectionNumber = sectionData[6] & 0xFF;
+                int lastSectionNumber = sectionData[7] & 0xFF;
+
                 Log.d(TAG, " ---------------------------------------------- ");
                 Log.d(TAG, " -- makePAT()");
-                Log.d(TAG, "tableId : 0x" + toHexString(mPat.getTableId()));
-                Log.d(TAG, "sectionSyntaxIndicator : 0x" + toHexString(mPat.getSectionSyntaxIndicator()));
-                Log.d(TAG, "sectionLength : 0x" + toHexString(mPat.getSectionLength()));
-                Log.d(TAG, "transportStreamId : 0x" + toHexString(mPat.getTransportStreamId()));
-                Log.d(TAG, "versionNumber : 0x" + toHexString(mPat.getVersionNumber()));
-                Log.d(TAG, "currentNextIndicator : 0x" + toHexString(mPat.getCurrentNextIndicator()));
-                Log.d(TAG, "sectionNumber : 0x" + toHexString(mPat.getSectionNumber()));
-                Log.d(TAG, "lastSectionNumber : 0x" + toHexString(mPat.getLastSectionNumber()));
+                Log.d(TAG, "tableId : 0x" + toHexString(tableId));
+                Log.d(TAG, "sectionSyntaxIndicator : 0x" + toHexString(sectionSyntaxIndicator));
+                Log.d(TAG, "sectionLength : 0x" + toHexString(sectionLength));
+                Log.d(TAG, "transportStreamId : 0x" + toHexString(transportStreamId));
+                Log.d(TAG, "versionNumber : 0x" + toHexString(versionNumber));
+                Log.d(TAG, "currentNextIndicator : 0x" + toHexString(currentNextIndicator));
+                Log.d(TAG, "sectionNumber : 0x" + toHexString(sectionNumber));
+                Log.d(TAG, "lastSectionNumber : 0x" + toHexString(lastSectionNumber));
             }
 
             /*
@@ -90,10 +97,6 @@ public class PatManager {
                 }
             }
 
-//            long crc32 = ((sectionData[sectionSize - 4] & 0xFF << 24) |
-//                    (sectionData[sectionSize - 3] & 0xFF << 16) |
-//                    (sectionData[sectionSize - 2] & 0xFF << 8) |
-//                    (sectionData[sectionSize - 1] & 0xFF)) & 0xFFFFFFFF;
         }
 
         mPat.setPatProgramList(mPatProgramList);

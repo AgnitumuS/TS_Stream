@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.excellence.iptv.MainActivity;
+import com.excellence.iptv.PlayerActivity;
 import com.excellence.iptv.R;
 import com.excellence.iptv.adapter.FavoriteListAdapter;
 import com.excellence.iptv.bean.Program;
@@ -25,6 +26,9 @@ import com.excellence.iptv.broadcast.MyActoin;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.excellence.iptv.fragment.LiveFragment.KEY_PROGRAM_NUM;
+import static com.excellence.iptv.fragment.LiveFragment.KEY_TS;
 
 /**
  * FavoriteFragment
@@ -112,6 +116,18 @@ public class FavoriteFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
         mFavoriteListAdapter = new FavoriteListAdapter(mMainActivity, mFavoriteList);
         recyclerView.setAdapter(mFavoriteListAdapter);
+
+        mFavoriteListAdapter.setOnItemClickListener(new FavoriteListAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                int programNum = mFavoriteList.get(position).getProgramNumber();
+
+                Intent intent = new Intent(mMainActivity, PlayerActivity.class);
+                intent.putExtra(KEY_TS, mMainActivity.getTs());
+                intent.putExtra(KEY_PROGRAM_NUM, programNum);
+                mMainActivity.startActivity(intent);
+            }
+        });
     }
 
 

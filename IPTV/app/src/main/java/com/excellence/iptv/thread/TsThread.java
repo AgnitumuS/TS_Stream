@@ -18,6 +18,7 @@ import static com.excellence.iptv.SelectFileActivity.GET_ALL_PMT;
 import static com.excellence.iptv.SelectFileActivity.GET_LENGTH_AND_START;
 import static com.excellence.iptv.SelectFileActivity.GET_PAT_SDT_EIT;
 import static com.excellence.iptv.SelectFileActivity.GET_PROGRAM_LIST;
+import static com.excellence.iptv.SelectFileActivity.TS_THREAD_IS_OVER;
 
 /**
  * TsThread
@@ -90,6 +91,7 @@ public class TsThread extends Thread {
             int err = mPacketManager.matchPacketLength(mInputFilePath);
             if (err == -1) {
                 Log.e(TAG, "Failed to get PacketLength and PacketStartPosition");
+                mHandler.sendEmptyMessage(TS_THREAD_IS_OVER);
                 return;
             } else {
                 // 保存 PacketLength 、 PacketStartPosition
@@ -112,6 +114,7 @@ public class TsThread extends Thread {
             int err = mPacketManager.matchSection(mInputFilePath, searchArray);
             if (err == -1) {
                 Log.e(TAG, "Failed to get PAT SDT EIT");
+                mHandler.sendEmptyMessage(TS_THREAD_IS_OVER);
                 return;
             } else {
                 // 保存 PAT、SDT、EIT
@@ -121,9 +124,11 @@ public class TsThread extends Thread {
                 mHandler.sendEmptyMessage(GET_PAT_SDT_EIT);
 
                 // 合成为节目列表 ProgramList
-                int error = mPacketManager.parseToProgramList();
+                int error = mPacketManager.parseProgramList();
                 if (error == -1) {
                     Log.e(TAG, "Failed to get ProgramList");
+                    mHandler.sendEmptyMessage(TS_THREAD_IS_OVER);
+                    return;
                 } else {
                     // 保存 ProgramList
                     mTs.setProgramList(mPacketManager.getProgramList());
@@ -142,6 +147,8 @@ public class TsThread extends Thread {
             int err = mPacketManager.matchSection(mInputFilePath, searchArray);
             if (err == -1) {
                 Log.e(TAG, "Failed to get all PMT");
+                mHandler.sendEmptyMessage(TS_THREAD_IS_OVER);
+                return;
             } else {
                 // 保存 PMT List
                 mTs.setPmtList(mPacketManager.getPmtList());
@@ -151,7 +158,8 @@ public class TsThread extends Thread {
 
         //记录结束时间
         long endTime = System.currentTimeMillis();
-        Log.e(TAG, "endTime - startTime = " + (endTime - startTime));
+        Log.e(TAG, " time : " + (endTime - startTime) + " ms");
+        mHandler.sendEmptyMessage(TS_THREAD_IS_OVER);
     }
 
 

@@ -39,23 +39,31 @@ public class SdtManager {
             byte[] sectionData = section.getSectionData();
 
             if (mSdt == null) {
-                mSdt = new Sdt(sectionData);
-            } else {
-                int sectionNumber = sectionData[6] & 0xFF;
-                mSdt.setSectionNumber(sectionNumber);
+                mSdt = new Sdt();
             }
+
             if (IS_LOG) {
+                int tableId = sectionData[0] & 0xFF;
+                int sectionSyntaxIndicator = (sectionData[1] >> 7) & 0x1;
+                int sectionLength = (((sectionData[1] & 0xF) << 8) | (sectionData[2] & 0xFF)) & 0xFFF;
+                int transportStreamId = (((sectionData[3] & 0xFF) << 8) | (sectionData[4] & 0xFF)) & 0xFFFF;
+                int versionNumber = (sectionData[5] >> 1) & 0x1F;
+                int currentNextIndicator = sectionData[5] & 0x1;
+                int sectionNumber = sectionData[6] & 0xFF;
+                int lastSectionNumber = sectionData[7] & 0xFF;
+                int originalNetworkId = (((sectionData[8] & 0xFF) << 8) | (sectionData[9] & 0xFF)) & 0xFFFF;
+
                 Log.d(TAG, " ---------------------------------------------- ");
                 Log.d(TAG, " -- makeSDT()");
-                Log.d(TAG, "tableId : 0x" + toHexString(mSdt.getTableId()));
-                Log.d(TAG, "sectionSyntaxIndicator : 0x" + toHexString(mSdt.getSectionSyntaxIndicator()));
-                Log.d(TAG, "sectionLength : 0x" + toHexString(mSdt.getSectionLength()));
-                Log.d(TAG, "transportStreamId : 0x" + toHexString(mSdt.getTransportStreamId()));
-                Log.d(TAG, "versionNumber : 0x" + toHexString(mSdt.getVersionNumber()));
-                Log.d(TAG, "currentNextIndicator : 0x" + toHexString(mSdt.getCurrentNextIndicator()));
-                Log.d(TAG, "sectionNumber : 0x" + toHexString(mSdt.getSectionNumber()));
-                Log.d(TAG, "lastSectionNumber : 0x" + toHexString(mSdt.getLastSectionNumber()));
-                Log.d(TAG, "originalNetworkId : 0x" + toHexString(mSdt.getOriginalNetworkId()));
+                Log.d(TAG, "tableId : 0x" + toHexString(tableId));
+                Log.d(TAG, "sectionSyntaxIndicator : 0x" + toHexString(sectionSyntaxIndicator));
+                Log.d(TAG, "sectionLength : 0x" + toHexString(sectionLength));
+                Log.d(TAG, "transportStreamId : 0x" + toHexString(transportStreamId));
+                Log.d(TAG, "versionNumber : 0x" + toHexString(versionNumber));
+                Log.d(TAG, "currentNextIndicator : 0x" + toHexString(currentNextIndicator));
+                Log.d(TAG, "sectionNumber : 0x" + toHexString(sectionNumber));
+                Log.d(TAG, "lastSectionNumber : 0x" + toHexString(lastSectionNumber));
+                Log.d(TAG, "originalNetworkId : 0x" + toHexString(originalNetworkId));
             }
 
 
@@ -126,7 +134,6 @@ public class SdtManager {
                     Log.d(TAG, "serviceNameLength : " + serviceNameLength);
                     Log.d(TAG, "serviceName : " + serviceName);
                 }
-
 
                 SdtService sdtService = new SdtService(
                         serviceId, eitScheduleFlag, eitPresentFollowingFlag,

@@ -1,12 +1,10 @@
 package com.excellence.iptv.adapter;
 
 import android.content.Context;
-import android.graphics.Typeface;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.excellence.iptv.R;
 import com.excellence.iptv.view.RobotoMediumTextView;
@@ -21,14 +19,14 @@ import java.util.List;
  * @date 2018/4/2
  */
 
-public class FileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.MyViewHolder> {
 
     private Context mContext;
     private List<String> mList;
 
     private OnItemClickListener mOnItemClickListener;
 
-    class MyViewHolder extends RecyclerView.ViewHolder {
+    static class MyViewHolder extends RecyclerView.ViewHolder {
         View itemView;
         RobotoMediumTextView fileNameTv;
 
@@ -51,31 +49,30 @@ public class FileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(mContext)
+    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.select_file_item, parent, false);
-        MyViewHolder holder = new MyViewHolder(view);
+        final MyViewHolder holder = new MyViewHolder(view);
+
+        // itemView 的点击事件
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mOnItemClickListener != null) {
+                    int position = holder.getAdapterPosition();
+                    mOnItemClickListener.onItemClick(v, position);
+                }
+            }
+        });
+
         return holder;
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        final MyViewHolder myViewHolder = (MyViewHolder) holder;
-
+    public void onBindViewHolder(MyViewHolder holder, int position) {
         String strResult = mContext.getResources().getString(R.string.select_file_item_tv_file_name);
         strResult = String.format(strResult, mList.get(position));
-        myViewHolder.fileNameTv.setText(strResult);
-
-        if (mOnItemClickListener != null) {
-            myViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    int pos = myViewHolder.getLayoutPosition();
-                    mOnItemClickListener.onItemClick(myViewHolder.itemView, pos);
-
-                }
-            });
-        }
+        holder.fileNameTv.setText(strResult);
     }
 
     @Override
@@ -86,9 +83,9 @@ public class FileListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     public interface OnItemClickListener {
         /**
-         * onItemClick
+         * item click
          *
-         * @param view     itemView
+         * @param view     item view
          * @param position item position
          */
         void onItemClick(View view, int position);

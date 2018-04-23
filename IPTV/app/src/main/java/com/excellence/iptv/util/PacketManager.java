@@ -1,12 +1,10 @@
 package com.excellence.iptv.util;
 
 import android.os.Environment;
-import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 
-import com.excellence.iptv.SelectFileActivity;
 import com.excellence.iptv.bean.Packet;
 import com.excellence.iptv.bean.Program;
 import com.excellence.iptv.bean.Section;
@@ -23,8 +21,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.Integer.toHexString;
-
 /**
  * PacketManager
  *
@@ -34,7 +30,7 @@ import static java.lang.Integer.toHexString;
 
 public class PacketManager {
     private static final String TAG = "PacketManager";
-    private static final int CYCLE_TEN_TIMES = 10;
+    private static final int TEN_TIMES = 10;
     private static final int PACKET_HEADER_SYNC_BYTE = 0x47;
     private static final int PACKET_LENGTH_188 = 188;
     private static final int PACKET_LENGTH_204 = 204;
@@ -54,12 +50,6 @@ public class PacketManager {
     private int mPacketLength = -1;
     private int mPacketStartPosition = -1;
 
-    private int mInputPID = -1;
-    private int mInputTableID = -1;
-    private int mPacketNum = -1;
-
-    private List<SectionManager> mSectionManagerList = new ArrayList<>();
-
     private Pat mPat = null;
     private Sdt mSdt = null;
     private Eit mEit = null;
@@ -70,24 +60,8 @@ public class PacketManager {
     private List<Program> mProgramList = null;
 
 
-    /**
-     * 构造函数
-     */
     public PacketManager() {
         super();
-    }
-
-    public PacketManager(String inputFilePath) {
-        super();
-        this.mInputFilePath = inputFilePath;
-    }
-
-    public PacketManager(String inputFilePath, int inputPID, int inputTableId) {
-        super();
-        this.mInputFilePath = inputFilePath;
-        this.mInputPID = inputPID;
-        this.mInputTableID = inputTableId;
-
     }
 
 
@@ -95,130 +69,105 @@ public class PacketManager {
      * 匹配 Packet Length 和 Packet Start Position
      */
     public int matchPacketLength(String inputFilePath) {
+        Log.d(TAG, " ---------------------------------------------- ");
         Log.d(TAG, " -- matchPacketLength()");
+        long startTime = System.currentTimeMillis();
 
         mInputFilePath = inputFilePath;
-
-        mPacketLength = -1;
         mPacketStartPosition = -1;
+        mPacketLength = -1;
 
         try {
             File file = new File(mInputFilePath);
-            FileInputStream fis = new FileInputStream(file);
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
+//            FileInputStream bis = new FileInputStream(file);
 
-            int tmp;
-            while ((tmp = fis.read()) != -1) {
-                // 记录包的开始位置
-                mPacketStartPosition++;
-                Log.d(TAG, "current position : " + mPacketStartPosition +
-                        "   0x" + toHexString(tmp));
+            boolean isFinish = false;
+            byte[] buff = new byte[204 * 11];
+            int counter = 0;
+            SparseArray<int[]> sparseArray188 = new SparseArray<>();
+            SparseArray<int[]> sparseArray204 = new SparseArray<>();
 
-                // matchSection to 0x47
-                if (tmp == PACKET_HEADER_SYNC_BYTE) {
-                    Log.d(TAG, "matchSection to 0x" + toHexString(PACKET_HEADER_SYNC_BYTE));
-
-                    /*
-                    循环 10 次跳 188
-                    匹配 isFinish == true，结束
-                    否则 isFinish == false，检测 204
-                    */
-                    boolean isFinish = true;
-                    for (int i = 0; i < CYCLE_TEN_TIMES; i++) {
-                        // seek 188 byteArray
-                        long lg = fis.skip(PACKET_LENGTH_188 - 1);
-                        if (lg != PACKET_LENGTH_188 - 1) {
-                            // 如果长度不够，返回失败结果
-                            Log.e(TAG, "failed to skip " + (PACKET_LENGTH_188 - 1) + "byteArray");
-                            return -1;
-                        }
-                        tmp = fis.read();
-                        Log.d(TAG, "skip " +
-                                PACKET_LENGTH_188 + " * " + (i + 1) +
-                                " byteArray :  0x" + toHexString(tmp));
-
-                        // determine the length of the packet is not the 188
-                        if (tmp != PACKET_HEADER_SYNC_BYTE) {
-                            // seek back
-                            lg = fis.skip((-1) * PACKET_LENGTH_188 * (i + 1));
-                            if (lg != (-1) * PACKET_LENGTH_188 * (i + 1)) {
-                                Log.e(TAG, "failed to skip " +
-                                        "(-1) * " + PACKET_LENGTH_188 + " * " + (i + 1) +
-                                        " byteArray");
-                                return -1;
-                            }
-
-                            isFinish = false;
-                            Log.d(TAG, "skip " +
-                                    "(-1) * " + PACKET_LENGTH_188 + " * " + (i + 1) +
-                                    " byteArray");
-                            // 跳出 10 次检测
-                            break;
-                        }
-
-                    }
-                    if (isFinish) {
-                        Log.d(TAG, "isFinish -- mPacketLength = " + PACKET_LENGTH_188);
-                        mPacketLength = PACKET_LENGTH_188;
-                        // 跳出 while ，结束检测
-                        break;
-                    }
-
-                    /*
-                    循环 10 次跳 204
-                    匹配 isFinish == true，结束
-                    否则 isFinish == false，继续检测下一位
-                    */
-                    isFinish = true;
-                    for (int i = 0; i < CYCLE_TEN_TIMES; i++) {
-                        // seek 204 byteArray
-                        long lg = fis.skip(PACKET_LENGTH_204 - 1);
-                        if (lg != PACKET_LENGTH_204 - 1) {
-                            // 如果长度不够，返回失败结果
-                            Log.e(TAG, "failed to skip " + (PACKET_LENGTH_204 - 1) + "byteArray");
-                            return -1;
-                        }
-                        tmp = fis.read();
-                        Log.d(TAG, "skip " +
-                                PACKET_LENGTH_204 + " * " + (i + 1) +
-                                " byteArray :  0x" + toHexString(tmp));
-
-                        // determine the length of the packet is not the 204
-                        if (tmp != PACKET_HEADER_SYNC_BYTE) {
-                            // seek back
-                            lg = fis.skip((-1) * PACKET_LENGTH_204 * (i + 1));
-                            if (lg != (-1) * PACKET_LENGTH_204 * (i + 1)) {
-                                Log.e(TAG, "failed to skip " +
-                                        "(-1) * " + PACKET_LENGTH_204 + " * " + (i + 1) +
-                                        " byteArray");
-                                return -1;
-                            }
-
-                            isFinish = false;
-                            Log.d(TAG, "skip " +
-                                    "(-1) * " + PACKET_LENGTH_204 + " * " + (i + 1) +
-                                    " byteArray");
-                            // 跳出 10 次检测
-                            break;
-                        }
-                    }
-                    if (isFinish) {
-                        Log.d(TAG, "isFinish -- mPacketLength = " + PACKET_LENGTH_204);
-                        mPacketLength = PACKET_LENGTH_204;
-                        // 跳出 while ，结束检测
-                        break;
-                    }
+            while (!isFinish) {
+                int err = bis.read(buff);
+                if (err == -1) {
+                    break;
                 }
+                int length = buff.length;
+                for (int i = 0; i < length; i++) {
+                    // 当找到 0x47 ,根据相对位置,比对间隔(currentValue)，
+                    // 如果相邻，累加；否则清空。
+                    if (buff[i] == PACKET_HEADER_SYNC_BYTE) {
+                        int result;
+                        // 判断 188
+                        result = packetLengthMethod(counter, PACKET_LENGTH_188, sparseArray188);
+                        if (result == -1) {
+                            isFinish = true;
+                            break;
+                        }
+                        // 判断 204
+                        result = packetLengthMethod(counter, PACKET_LENGTH_204, sparseArray204);
+                        if (result == -1) {
+                            isFinish = true;
+                            break;
+                        }
+                    }
 
+                    counter++;
+                }
             }
 
-            fis.close();
+            bis.close();
 
+            Log.d(TAG, "read size : " + counter + " byte");
         } catch (IOException e) {
-            Log.e(TAG, "IOException : 打开文件失败");
+            Log.e(TAG, "Error IOException");
             e.printStackTrace();
         }
 
+        long endTime = System.currentTimeMillis();
+        Log.e(TAG, " time : " + (endTime - startTime) + " ms");
         return mPacketLength;
+    }
+
+    private int packetLengthMethod(int counter, int matchPacketLen, SparseArray<int[]> sparseArray) {
+        // 间隔值
+        int currentValue = counter / matchPacketLen;
+        // 相对位置
+        int relativePosition = counter % matchPacketLen;
+        // 查寻相对位置的的记录
+        int[] data = sparseArray.get(relativePosition, null);
+        if (data != null) {
+            int packetStartPosition = data[0];
+            int value = data[1];
+            int accumulator = data[2];
+            // 累加数 10
+            if (accumulator == TEN_TIMES) {
+                mPacketStartPosition = packetStartPosition;
+                mPacketLength = matchPacketLen;
+                Log.d(TAG, "PacketStartPosition : " + packetStartPosition);
+                Log.d(TAG, "PacketLen : " + matchPacketLen);
+                Log.d(TAG, "accumulator : " + accumulator);
+                return -1;
+            }
+            // 判断间隔是否相邻，是进行累加；不是，清空数据
+            if (currentValue - value == 1) {
+                data[1] = currentValue;
+                data[2] += 1;
+                sparseArray.put(relativePosition, data);
+            } else {
+                sparseArray.delete(relativePosition);
+            }
+        } else {
+            // PacketStartPosition 、间隔值、累加数
+            data = new int[3];
+            data[0] = counter;
+            data[1] = currentValue;
+            data[2] = 1;
+            sparseArray.put(relativePosition, data);
+        }
+
+        return 0;
     }
 
 
@@ -236,7 +185,8 @@ public class PacketManager {
         }
 
         try {
-            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(mInputFilePath));
+            File file = new File(mInputFilePath);
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
 //            FileInputStream fis = new FileInputStream(mInputFilePath);
 
             SparseIntArray sparseIntArray = new SparseIntArray();
@@ -288,7 +238,7 @@ public class PacketManager {
             bis.close();
 
         } catch (IOException e) {
-            Log.e(TAG, "IOException : 打开文件失败");
+            Log.e(TAG, "Error IOException");
             e.printStackTrace();
         }
 
@@ -296,17 +246,23 @@ public class PacketManager {
     }
 
 
+    /**
+     * 匹配 Section
+     * 同时找出多个表的 Section
+     */
     public int matchSection(String inputFilePath, int[][] searchArray) {
+        Log.d(TAG, " ---------------------------------------------- ");
         Log.d(TAG, " -- matchSection()");
+        long startTime = System.currentTimeMillis();
 
         mInputFilePath = inputFilePath;
 
-        // 准备 SectionManager
         SparseIntArray sparseIntArray = new SparseIntArray();
-        mSectionManagerList.clear();
+        List<SectionManager> sectionManagerList = new ArrayList<>();
+
         for (int i = 0; i < searchArray.length; i++) {
             SectionManager sectionManager = new SectionManager();
-            mSectionManagerList.add(sectionManager);
+            sectionManagerList.add(sectionManager);
             sparseIntArray.put(searchArray[i][0], i);
         }
 
@@ -317,8 +273,9 @@ public class PacketManager {
         }
 
         try {
-            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(mInputFilePath));
-//            FileInputStream fis = new FileInputStream(mInputFilePath);
+            File file = new File(mInputFilePath);
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
+//            FileInputStream bis = new FileInputStream(file);
 
             // 跳到包的开始位置
             long lg = bis.skip(mPacketStartPosition);
@@ -328,43 +285,55 @@ public class PacketManager {
             }
 
             int err;
-            do {
-                // 中断查找
-                if (mInterrupt) {
-                    mInterrupt = false;
-                    Log.e(TAG, "matchSection() mInterrupt !!!");
-                    return -1;
-                }
+            byte[] buff = new byte[mPacketLength * 50];
+            byte[] onePacket = new byte[mPacketLength];
+            while ((err = bis.read(buff)) != -1) {
+                for (int i = 0; i < err / mPacketLength; i++) {
+                    // 中断标志
+                    if (mInterrupt) {
+                        mInterrupt = false;
+                        Log.e(TAG, "matchSection() mInterrupt !!!");
+                        return -1;
+                    }
 
-                byte[] buff = new byte[mPacketLength];
-                err = bis.read(buff);
-                if (err == mPacketLength) {
-                    if (buff[0] == PACKET_HEADER_SYNC_BYTE) {
+                    // 字符串截取
+                    System.arraycopy(buff, mPacketLength * i, onePacket, 0, mPacketLength);
+
+                    if (onePacket[0] == PACKET_HEADER_SYNC_BYTE) {
                         // 构建 packet 对象
-                        Packet packet = new Packet(buff);
+                        Packet packet = new Packet(onePacket);
+                        // 判断传输错误
+                        if (packet.getTransportErrorIndicator() == 1) {
+                            Log.e(TAG, "Error transport_error_indicator : 1");
+                            continue;
+                        }
 
                         int position = sparseIntArray.get(packet.getPid(), -1);
                         if (position != -1) {
-                            SectionManager sectionManager = mSectionManagerList.get(position);
+                            SectionManager sectionManager = sectionManagerList.get(position);
                             sectionManager.matchSection(packet, searchArray[position][1]);
                         }
                     }
+
                 }
-
-
-            } while (err != -1);
+            }
 
             bis.close();
 
         } catch (IOException e) {
-            Log.e(TAG, "IOException : 打开文件失败");
+            Log.e(TAG, "Error IOException");
             e.printStackTrace();
         }
+        long endTime = System.currentTimeMillis();
+        Log.e(TAG, "match Section time : " + (endTime - startTime) + " ms");
+
 
         // 解表
         for (int i = 0; i < searchArray.length; i++) {
-            parseToTable(mSectionManagerList.get(i).getSectionList(), searchArray[i][0]);
+            parseTable(sectionManagerList.get(i).getSectionList(), searchArray[i][0]);
         }
+        long endTime2 = System.currentTimeMillis();
+        Log.e(TAG, "parse Table time : " + (endTime2 - endTime) + " ms");
 
         return 0;
     }
@@ -376,7 +345,7 @@ public class PacketManager {
      * 2）合成 SDT 表
      * 3）合成 PMT 表
      */
-    private void parseToTable(List<Section> list, int pid) {
+    private void parseTable(List<Section> list, int pid) {
         if (list == null) {
             Log.e(TAG, "Section List == null !!!");
             return;
@@ -410,7 +379,7 @@ public class PacketManager {
     /**
      * 合成节目列表：ProgramList
      */
-    public int parseToProgramList() {
+    public int parseProgramList() {
         if (mPat == null || mSdt == null || mEit == null) {
             return -1;
         }
@@ -432,6 +401,10 @@ public class PacketManager {
         this.mInputFilePath = mInputFilePath;
     }
 
+    public void setOutputFilePath(String mOutputFilePath) {
+        this.mOutputFilePath = mOutputFilePath;
+    }
+
     public int getPacketLength() {
         return mPacketLength;
     }
@@ -446,26 +419,6 @@ public class PacketManager {
 
     public void setPacketStartPosition(int mPacketStartPosition) {
         this.mPacketStartPosition = mPacketStartPosition;
-    }
-
-    public int getInputPID() {
-        return mInputPID;
-    }
-
-    public void setInputPID(int mInputPID) {
-        this.mInputPID = mInputPID;
-    }
-
-    public int getInputTableID() {
-        return mInputTableID;
-    }
-
-    public void setInputTableID(int mInputTableID) {
-        this.mInputTableID = mInputTableID;
-    }
-
-    public void setOutputFilePath(String mOutputFilePath) {
-        this.mOutputFilePath = mOutputFilePath;
     }
 
     public Pat getPat() {
@@ -490,14 +443,6 @@ public class PacketManager {
 
     public void setEit(Eit mEit) {
         this.mEit = mEit;
-    }
-
-    public Pmt getPmt() {
-        return mPmt;
-    }
-
-    public void setPmt(Pmt mPmt) {
-        this.mPmt = mPmt;
     }
 
     public List<Pmt> getPmtList() {

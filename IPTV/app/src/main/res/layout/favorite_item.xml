@@ -4,30 +4,17 @@
     android:layout_height="wrap_content"
     android:layout_margin="@dimen/margin_micro_super_super">
 
-    <FrameLayout
-        android:id="@+id/fl_favorite_item_program_pic"
+    <com.excellence.iptv.view.FavImageView
+        android:id="@+id/iv_favorite_item_program_pic"
         android:layout_width="@dimen/favorite_item_program_pic_iv_width"
         android:layout_height="@dimen/favorite_item_program_pic_iv_height"
-        android:layout_centerHorizontal="true">
-
-        <ImageView
-            android:id="@+id/iv_favorite_item_program_pic"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <ImageView
-            android:id="@+id/iv_favorite_item_edit_mode"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@color/favorite_item_edit_mode_iv_color"
-            android:visibility="invisible"/>
-    </FrameLayout>
+        android:layout_centerHorizontal="true" />
 
     <com.excellence.iptv.view.RobotoRegularTextView
         android:id="@+id/tv_favorite_item_program_info"
         android:layout_width="@dimen/favorite_item_program_pic_iv_width"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/fl_favorite_item_program_pic"
+        android:layout_below="@+id/iv_favorite_item_program_pic"
         android:layout_centerHorizontal="true"
         android:gravity="center"
         android:singleLine="true"
@@ -37,10 +24,9 @@
         android:id="@+id/iv_favorite_item_delete_icon"
         android:layout_width="@dimen/favorite_item_delete_iv_width"
         android:layout_height="@dimen/favorite_item_delete_iv_height"
-        android:layout_alignRight="@+id/fl_favorite_item_program_pic"
+        android:layout_alignRight="@+id/iv_favorite_item_program_pic"
         android:layout_marginRight="@dimen/margin_micro_super_super"
-        android:layout_marginTop="@dimen/margin_micro_super_super"
-        android:scaleType="fitXY"
+        android:layout_marginTop="@dimen/margin_micro_super"
         android:src="@drawable/icon_delete"
         android:visibility="invisible" />
 
