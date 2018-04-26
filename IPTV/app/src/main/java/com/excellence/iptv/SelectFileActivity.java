@@ -164,9 +164,11 @@ public class SelectFileActivity extends AppCompatActivity {
                     showPopupWindow();
                     // 开启线程,遍历文件
                     traverseFile();
-                }
 
-                refreshlayout.finishRefresh();
+                    refreshlayout.finishRefresh(true);
+                } else {
+                    refreshlayout.finishRefresh(false);
+                }
             }
         });
     }
@@ -249,35 +251,27 @@ public class SelectFileActivity extends AppCompatActivity {
             SelectFileActivity selectFileActivity = mWeakReference.get();
 
             if (selectFileActivity != null) {
+                String showContent = selectFileActivity
+                        .getResources().getString(R.string.select_file_popup_tv_content);
                 switch (msg.what) {
                     case GET_FILE:
                         selectFileActivity.mPopupWindow.dismiss();
                         selectFileActivity.mFileListAdapter.notifyDataSetChanged();
                         break;
                     case GET_LENGTH_AND_START:
-                        String s1 = selectFileActivity
-                                .getResources().getString(R.string.select_file_popup_tv_content);
-                        s1 = String.format(s1, "Get Length StartPosition");
-                        selectFileActivity.mLoadingTv.setText(s1);
+                        showContent = String.format(showContent, "PAT SDT EIT");
+                        selectFileActivity.mLoadingTv.setText(showContent);
                         break;
                     case GET_PAT_SDT_EIT:
-                        String s2 = selectFileActivity
-                                .getResources().getString(R.string.select_file_popup_tv_content);
-                        s2 = String.format(s2, "Get PAT SDT EIT");
-                        selectFileActivity.mLoadingTv.setText(s2);
+                        showContent = String.format(showContent, "ProgramList");
+                        selectFileActivity.mLoadingTv.setText(showContent);
                         break;
                     case GET_PROGRAM_LIST:
-                        String s3 = selectFileActivity
-                                .getResources().getString(R.string.select_file_popup_tv_content);
-                        s3 = String.format(s3, "Get ProgramList");
-                        Toast.makeText(selectFileActivity, s3, Toast.LENGTH_SHORT).show();
+                        showContent = String.format(showContent, "PMT");
+                        selectFileActivity.mLoadingTv.setText(showContent);
                         break;
                     case GET_ALL_PMT:
                         selectFileActivity.mPopupWindow.dismiss();
-                        String s4 = selectFileActivity
-                                .getResources().getString(R.string.select_file_popup_tv_content);
-                        s4 = String.format(s4, "Get PMT");
-                        Toast.makeText(selectFileActivity, s4, Toast.LENGTH_SHORT).show();
 
                         // 进入 MainActivity
                         Intent intent = new Intent(selectFileActivity, MainActivity.class);
@@ -286,10 +280,6 @@ public class SelectFileActivity extends AppCompatActivity {
                         break;
                     case TS_THREAD_IS_OVER:
                         selectFileActivity.mPopupWindow.dismiss();
-                        String s5 = selectFileActivity
-                                .getResources().getString(R.string.select_file_popup_tv_content);
-                        s5 = String.format(s5, "TsThread is over");
-                        Toast.makeText(selectFileActivity, s5, Toast.LENGTH_SHORT).show();
                         break;
                     default:
                         break;
@@ -326,6 +316,7 @@ public class SelectFileActivity extends AppCompatActivity {
             case WRITE_EXTERNAL_PERMISSION:
                 if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
                     Toast.makeText(this, "WRITE_EXTERNAL_STORAGE ALLOW", Toast.LENGTH_SHORT).show();
+                    mRefreshLayout.autoRefresh();
                 } else {
                     Toast.makeText(this, "WRITE_EXTERNAL_STORAGE DENY", Toast.LENGTH_SHORT).show();
                 }
