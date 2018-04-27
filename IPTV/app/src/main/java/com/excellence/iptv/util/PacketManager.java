@@ -156,7 +156,10 @@ public class PacketManager {
                 data[2] += 1;
                 sparseArray.put(relativePosition, data);
             } else {
-                sparseArray.delete(relativePosition);
+                data[0] = counter;
+                data[1] = currentValue;
+                data[2] = 1;
+                sparseArray.put(relativePosition, data);
             }
         } else {
             // PacketStartPosition 、间隔值、累加数
